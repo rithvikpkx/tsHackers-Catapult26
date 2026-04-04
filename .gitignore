@@ -2,6 +2,7 @@
 __pycache__/
 *.pyc
 .venv/
+.venv*/
 
 # Node
 node_modules/
@@ -17,3 +18,5 @@ dist/
 .idea/
 .vscode/
 
+# Local ML cache
+builder_c/artifacts/oulad_feature_cache.csv

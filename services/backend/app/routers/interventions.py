@@ -25,8 +25,8 @@ def plan_intervention(payload: InterventionRequest) -> InterventionResponse:
 
     return InterventionResponse(
         task_id=task.id,
-        risk_before=task.failure_risk or 0.72,
-        risk_after=max(0.15, (task.failure_risk or 0.72) - 0.3),
+        risk_before=task.failure_risk or task.course_risk_prior or 0.72,
+        risk_after=max(0.15, (task.failure_risk or task.course_risk_prior or 0.72) - 0.3),
         before=now_blocks,
         after=now_blocks + [intervention_block],
         smallest_next_step="Open notes and solve only question 1 for 10 minutes.",

@@ -17,7 +17,9 @@
     "due_date": { "type": "string", "format": "date-time" },
     "estimated_effort_hours": { "type": "number", "minimum": 0 },
     "corrected_effort_hours": { "type": "number", "minimum": 0 },
+    "course_risk_prior": { "type": "number", "minimum": 0, "maximum": 1 },
     "failure_risk": { "type": "number", "minimum": 0, "maximum": 1 },
+    "risk_explanation": { "type": "string" },
     "status": {
       "type": "string",
       "enum": ["todo", "in_progress", "blocked", "done"]
