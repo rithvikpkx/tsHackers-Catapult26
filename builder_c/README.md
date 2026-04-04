@@ -1,28 +1,21 @@
 # Builder C Starter
 
-This folder gives Builder C a beginner-friendly starting point for the Grind hackathon build.
+This folder now contains the OULAD-backed bootstrap ML layer for Grind.
 
-It covers the first useful slice from the brief:
+The model is intentionally not the whole product. It gives Grind a defensible starting `course_risk_prior`, and the app then turns that into task-level `failure_risk` with due-date urgency and lightweight personalization signals.
 
-- a distortion model that turns raw estimates into corrected effort
-- a failure-risk model that assigns a miss probability
-- a user-facing risk explanation
-- a simple JSON contract that Builders A and B can consume
-- a tiny HTTP API so the team can demo the ML output without waiting on a full service rewrite
+## What lives here
 
-The code intentionally stays readable and dependency-light. Everything here runs on the Python standard library so the team can start iterating immediately, then swap pieces out for scikit-learn or FastAPI later if needed.
+- `starter/`: OULAD feature engineering, training, task-risk combination, and explanations
+- `data/`: demo tasks with course snapshots and personalization signals
+- `artifacts/`: trained model, metrics, validation predictions, and demo outputs
+- `tests/`: smoke tests for the task-risk combiner
 
-## Folder layout
+## Training
 
-- `data/`: seeded training data and demo tasks
-- `contracts/`: request/response shape for the scoring endpoint
-- `starter/`: the actual training, scoring, and serving code
-- `artifacts/`: generated model snapshot and example predictions
-- `tests/`: smoke coverage for the starter pipeline
+Set `OULAD_DATA_DIR` to the folder containing the raw CSVs, or keep the local default if the dataset already lives at `C:\Users\athar\Downloads\archive (2)`.
 
-## Quick start
-
-From the repo root:
+Run from the repo root with the ML environment active:
 
 ```powershell
 python -m builder_c.starter.train_models
@@ -30,33 +23,18 @@ python -m builder_c.starter.run_demo
 python -m unittest builder_c.tests.test_pipeline
 ```
 
-To run the local JSON API:
+Training will:
 
-```powershell
-python -m builder_c.starter.serve_api
-```
+- aggregate first-30-day OULAD features
+- train a binary `at_risk` logistic baseline
+- save metrics and validation predictions
+- generate seeded task scores for Builder A and Builder B
 
-Then `POST` a task to `http://localhost:8000/score`.
+## Outputs the rest of the app can rely on
 
-## What Builders A and B can rely on
-
-The scoring response always includes:
-
-- `corrected_effort_hours`
-- `distortion_multiplier`
-- `failure_probability`
+- `course_risk_prior`
+- `failure_risk`
 - `risk_bucket`
 - `risk_explanation`
 
-That gives the frontend enough to show:
-
-- original estimate vs corrected estimate
-- a risk chip or progress meter
-- a plain-English "why this is risky" panel
-
-## Suggested next upgrades
-
-- replace the pure-Python regressions with scikit-learn once the environment is ready
-- move the API from the built-in HTTP server to FastAPI
-- add real assignment history from Builder A's ingestion path
-- track intervention outcomes so the models can learn from schedule changes
+Corrected effort stays outside the OULAD model in this version.

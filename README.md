@@ -43,15 +43,15 @@ Key files:
 Builder C now has two connected pieces:
 
 - `services/ml/` for the FastAPI scoring service that the rest of the app can call
-- `builder_c/` for beginner-friendly training data, model code, generated artifacts, and tests
+- `builder_c/` for the OULAD bootstrap prior, task-risk combiner, generated artifacts, and tests
 
-The current starter includes:
+The current ML layer includes:
 
-- a trainable distortion model for corrected effort
-- a failure-risk model with a probability score
-- a plain-English risk explanation
-- a JSON scoring contract for Builder A and Builder B handoff
-- example predictions for the OS problem set rescue flow
+- a first-30-day OULAD feature pipeline
+- a trainable binary `at_risk` bootstrap prior for course context
+- a task-risk combiner that layers urgency and personalization on top
+- a plain-English risk explanation for Builder B's surfaces
+- seeded demo task outputs for Builder A/B integration
 
 ## Quick Start
 
@@ -78,6 +78,7 @@ uvicorn app.main:app --reload --port 8001
 Builder C starter pipeline:
 
 ```bash
+set OULAD_DATA_DIR=C:\path\to\oulad
 python -m builder_c.starter.train_models
 python -m builder_c.starter.run_demo
 python -m unittest builder_c.tests.test_pipeline

@@ -1,24 +1,27 @@
 {
   "request": {
-    "task_id": "os-problem-set-4",
-    "title": "OS problem set 4",
-    "course": "Operating Systems",
+    "task_id": "task-cs-pset-4",
+    "title": "CS 340 Problem Set 4",
+    "course": "CS 340",
     "task_type": "problem_set",
-    "estimate_hours": 4.0,
+    "estimate_hours": 3.0,
+    "corrected_effort_hours": 6.0,
     "hours_until_due": 30.0,
-    "start_delay_hours": 18.0,
-    "weekly_course_load": 16.0
+    "start_delay_hours": 14.0,
+    "status": "todo",
+    "course_risk_prior": 0.72,
+    "personalization_signals": {
+      "recent_completion_rate": 0.42,
+      "recent_overdue_count": 2,
+      "start_lag_hours": 11,
+      "focus_block_accept_rate": 0.55,
+      "focus_block_completion_rate": 0.38
+    }
   },
   "response": {
-    "task_id": "os-problem-set-4",
-    "title": "OS problem set 4",
-    "course": "Operating Systems",
-    "task_type": "problem_set",
-    "estimate_hours": 4.0,
-    "corrected_effort_hours": 7.48,
-    "distortion_multiplier": 1.87,
-    "failure_probability": 0.98,
+    "course_risk_prior": 0.72,
+    "failure_risk": 0.82,
     "risk_bucket": "high",
-    "risk_explanation": "This task is high risk because the corrected effort is heavy for the realistic focus time left, the deadline is close, the work is starting late, and the rest of the week is already crowded."
+    "risk_explanation": "This task is high risk because the course itself is already showing risk, the deadline is close, and recent misses are stacking up. The course context already looks risky because an early assessment is still missing, early assessment scores are trailing, and course engagement is low."
   }
 }
