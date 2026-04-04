@@ -9,6 +9,7 @@ from fastapi.responses import RedirectResponse
 from app.auth import AuthDep
 from app.config import settings
 from app.models import (
+    BrightspaceFeedImportRequest,
     CalendarConnectionStatus,
     CalendarFocusBlockRequest,
     CalendarSyncResponse,
@@ -24,6 +25,10 @@ from app.services.google_calendar import (
     list_upcoming_events,
     refresh_access_token,
 )
+from app.services.brightspace_ics import BrightspaceImportError, events_to_tasks, fetch_and_parse_events
+from app.services.ml_client import enrich_task_with_ml
+from app.services.task_refresh import refresh_personalization
+from app.repos.tasks_repo import upsert_tasks
 
 router = APIRouter(prefix="/api/calendar", tags=["calendar"])
 _OAUTH_STATES: dict[str, str] = {}
@@ -37,13 +42,15 @@ def _parse_datetime(value: datetime | str | None) -> datetime | None:
 
 def _status_payload(user_id: str) -> CalendarConnectionStatus:
     connection = get_connection(user_id)
+    oauth_configured = bool(settings.google_client_id and settings.google_client_secret)
     if connection is None:
-        return CalendarConnectionStatus()
+        return CalendarConnectionStatus(oauth_configured=oauth_configured)
 
     expires_at = _parse_datetime(connection.get("expires_at"))
     return CalendarConnectionStatus(
         connected=True,
         provider=connection.get("provider", "google"),
+        oauth_configured=oauth_configured,
         provider_user_email=connection.get("provider_user_email"),
         expires_at=expires_at,
         has_refresh_token=bool(connection.get("refresh_token")),
@@ -89,8 +96,11 @@ def calendar_status(auth=AuthDep) -> CalendarConnectionStatus:
 
 @router.get("/connect/start")
 def start_google_oauth(auth=AuthDep) -> dict[str, str]:
-    if not settings.google_client_id:
-        raise HTTPException(status_code=503, detail="Google OAuth client id is not configured")
+    if not settings.google_client_id or not settings.google_client_secret:
+        raise HTTPException(
+            status_code=503,
+            detail="Google Calendar OAuth is not configured on this machine yet. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in services/backend/.env.",
+        )
 
     state = token_urlsafe(24)
     _OAUTH_STATES[state] = auth.user_id
@@ -189,3 +199,34 @@ def create_focus_block(payload: CalendarFocusBlockRequest, auth=AuthDep) -> dict
         ),
     )
     return created
+
+
+@router.post("/brightspace/import")
+def import_brightspace_feed(payload: BrightspaceFeedImportRequest, auth=AuthDep) -> dict[str, int | str]:
+    try:
+        events = fetch_and_parse_events(payload.feed_url)
+    except (BrightspaceImportError, httpx.HTTPError) as exc:
+        raise HTTPException(status_code=502, detail=f"Brightspace calendar import failed: {exc}") from exc
+
+    tasks = events_to_tasks(events)
+    signals = refresh_personalization(auth.user_id)
+    enriched = []
+    for task in tasks:
+        task.user_id = auth.user_id
+        try:
+            enriched.append(enrich_task_with_ml(task, signals))
+        except httpx.HTTPError:
+            enriched.append(task)
+
+        append_event(
+            auth.user_id,
+            TaskEvent(
+                event_type=TaskEventType.TASK_CREATED,
+                task_id=task.id,
+                occurred_at=task.updated_at,
+                metadata={"course": task.course, "source": "brightspace_calendar_import"},
+            ),
+        )
+
+    count = upsert_tasks(auth.user_id, enriched, "brightspace_calendar_import")
+    return {"source": "brightspace_calendar_import", "ingested_count": count}

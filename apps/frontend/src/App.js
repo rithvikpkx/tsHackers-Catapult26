@@ -10,6 +10,7 @@ import InterventionCard from "./components/grind/InterventionCard";
 import InterventionPage from "./components/grind/InterventionPage";
 import UpdatedSchedulePage from "./components/grind/UpdatedSchedulePage";
 import StartModePage from "./components/grind/StartModePage";
+import OnboardingPage from "./components/grind/OnboardingPage";
 import "./components/grind/grind.css";
 import "./components/grind/UpdatedSchedule.css";
 import "./components/grind/DesignSystem.css";
@@ -17,6 +18,7 @@ import "./components/grind/polish.css";
 
 import {
   createFocusBlock,
+  importBrightspaceFeed,
   loadDashboardPayload,
   logTaskEvent,
   startCalendarConnection,
@@ -56,6 +58,19 @@ function CalendarCard({ calendar, onConnect, onRefresh, actionBusy }) {
   );
 }
 
+function EmptyWorkspaceCard() {
+  return (
+    <div className="card empty-workspace-card">
+      <div className="card-label">No tasks yet</div>
+      <div className="calendar-title">Your workspace is intentionally empty.</div>
+      <p className="calendar-copy">
+        Grind will stay clean until you ingest or add tasks. Right now it can still learn your weekly shape from
+        your calendar and prepare the schedule layer first.
+      </p>
+    </div>
+  );
+}
+
 function Dashboard({
   user,
   onNavigate,
@@ -86,13 +101,19 @@ function Dashboard({
         onRefresh={onSyncCalendar}
         actionBusy={actionBusy}
       />
-      <MetricCards metrics={payload.metrics} />
-      <PulseChart restingRate={payload.summary.resting_rate} />
-      <div className="two-col">
-        <TaskList tasks={payload.tasks} onSelect={() => onNavigate("intervention")} />
-        <DistortionPanel insights={payload.distortion} />
-      </div>
-      <InterventionCard intervention={payload.interventionCard} onOpen={() => onNavigate("intervention")} />
+      {payload.allTasks.length === 0 ? (
+        <EmptyWorkspaceCard />
+      ) : (
+        <>
+          <MetricCards metrics={payload.metrics} />
+          <PulseChart restingRate={payload.summary.resting_rate} />
+          <div className="two-col">
+            <TaskList tasks={payload.tasks} onSelect={() => onNavigate("intervention")} />
+            <DistortionPanel insights={payload.distortion} />
+          </div>
+          <InterventionCard intervention={payload.interventionCard} onOpen={() => onNavigate("intervention")} />
+        </>
+      )}
     </div>
   );
 }
@@ -140,12 +161,13 @@ const EMPTY_PAYLOAD = {
 export default function App() {
   const [user, setUser] = useState(null);
   const [sidebarOpen, setSidebar] = useState(false);
-  const [page, setPage] = useState("dashboard");
+  const [page, setPage] = useState("onboarding");
   const [loading, setLoading] = useState(true);
   const [actionBusy, setActionBusy] = useState("");
   const [payload, setPayload] = useState(EMPTY_PAYLOAD);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
+  const needsInitialOnboarding = !payload.calendar?.status?.connected && payload.allTasks.length === 0;
 
   async function refreshPayload(showSpinner = false) {
     if (showSpinner) setLoading(true);
@@ -167,6 +189,7 @@ export default function App() {
     const calendarStatus = params.get("calendar");
     if (calendarStatus === "connected") {
       setNotice("Google Calendar connected. Grind is pulling your next 7 days of schedule now.");
+      setPage("onboarding");
       window.history.replaceState({}, "", window.location.pathname);
     } else if (calendarStatus === "error") {
       setError("Google Calendar connection did not complete. Try the connect flow again.");
@@ -210,6 +233,15 @@ export default function App() {
       .then(() => setNotice("Schedule refreshed from the backend."))
       .catch((err) => setError(err.message || "Failed to refresh the schedule."))
       .finally(() => setActionBusy(""));
+  }
+
+  function handleImportBrightspace(feedUrl) {
+    return runAction(
+      "brightspace-import",
+      () => importBrightspaceFeed(feedUrl),
+      "Brightspace calendar imported. Grind now has your real task dates instead of seeded data.",
+      "dashboard"
+    );
   }
 
   function handleAcceptPlan() {
@@ -262,6 +294,19 @@ export default function App() {
 
   function renderPage() {
     switch (page) {
+      case "onboarding":
+        return (
+          <OnboardingPage
+            user={user}
+            calendar={payload.calendar}
+            hasTasks={payload.allTasks.length > 0}
+            actionBusy={Boolean(actionBusy)}
+            onConnectCalendar={handleConnectCalendar}
+            onImportBrightspace={handleImportBrightspace}
+            onSyncCalendar={handleSyncCalendar}
+            onContinue={() => setPage("dashboard")}
+          />
+        );
       case "dashboard":
         return (
           <Dashboard
@@ -324,19 +369,24 @@ export default function App() {
 
   return (
     <div className="grind-app">
-      <Sidebar
-        open={sidebarOpen}
-        onClose={() => setSidebar(false)}
-        currentPage={page}
-        onNavigate={setPage}
-        user={user}
-      />
+      {!needsInitialOnboarding && (
+        <Sidebar
+          open={sidebarOpen}
+          onClose={() => setSidebar(false)}
+          currentPage={page}
+          onNavigate={setPage}
+          user={user}
+        />
+      )}
       <TopBar
-        onMenuClick={() => setSidebar(true)}
+        onMenuClick={() => (needsInitialOnboarding ? setPage("onboarding") : setSidebar(true))}
         onSyncCalendar={handleSyncCalendar}
-        onOpenStartMode={() => setPage("start")}
+        onOpenStartMode={() => setPage(needsInitialOnboarding ? "onboarding" : "start")}
         calendarConnected={payload.calendar?.status?.connected}
         actionBusy={Boolean(actionBusy)}
+        showMenu={!needsInitialOnboarding}
+        showStartAction={!needsInitialOnboarding}
+        calendarActionLabel={needsInitialOnboarding ? "Refresh status" : undefined}
       />
       <div className="main-shell">
         <StatusBanner tone="success" text={notice} />

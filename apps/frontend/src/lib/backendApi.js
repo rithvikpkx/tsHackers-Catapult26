@@ -10,7 +10,16 @@ async function fetchJson(path, options = {}) {
     },
   });
   if (!response.ok) {
-    throw new Error(`Backend request failed: ${path} (${response.status})`);
+    let detail = "";
+    try {
+      const payload = await response.json();
+      detail = payload?.detail || payload?.message || "";
+    } catch {
+      detail = "";
+    }
+    throw new Error(
+      detail ? `${detail}` : `Backend request failed: ${path} (${response.status})`
+    );
   }
   return response.json();
 }
@@ -198,6 +207,13 @@ export async function loadDashboardPayload() {
 
 export async function startCalendarConnection() {
   return fetchJson("/api/calendar/connect/start");
+}
+
+export async function importBrightspaceFeed(feedUrl) {
+  return fetchJson("/api/calendar/brightspace/import", {
+    method: "POST",
+    body: JSON.stringify({ feed_url: feedUrl }),
+  });
 }
 
 export async function syncCalendarSchedule(days = 7) {

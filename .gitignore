@@ -21,3 +21,6 @@ build/
 
 # Local ML cache
 builder_c/artifacts/oulad_feature_cache.csv
+
+# Local verification logs
+.codex-local-logs/

@@ -7,14 +7,12 @@ from app.repos.events_repo import append_event
 from app.repos.tasks_repo import get_task_by_id, upsert_tasks
 from app.services.ml_client import enrich_task_with_ml
 from app.services.task_refresh import refresh_personalization, refresh_task_scores
-from app.store import load_seed_tasks
 
 router = APIRouter(prefix="/api/tasks", tags=["tasks"])
 
 
 @router.get("", response_model=list[Task])
 def list_tasks(auth=AuthDep) -> list[Task]:
-    load_seed_tasks()
     tasks, _ = refresh_task_scores(auth.user_id)
     return tasks
 

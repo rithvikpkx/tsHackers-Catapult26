@@ -1,5 +1,3 @@
-import json
-from pathlib import Path
 from typing import Any
 
 from app.models import PersonalizationSignals, Task, TaskEvent, TaskEventType
@@ -7,18 +5,6 @@ from app.models import PersonalizationSignals, Task, TaskEvent, TaskEventType
 TASKS: dict[str, Task] = {}
 TASK_EVENTS: list[TaskEvent] = []
 CALENDAR_CONNECTIONS: dict[str, dict[str, Any]] = {}
-
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
-SEED_TASKS_PATH = PROJECT_ROOT / "data" / "seed" / "tasks.json"
-
-
-def load_seed_tasks() -> None:
-    if TASKS or not SEED_TASKS_PATH.exists():
-        return
-    payload = json.loads(SEED_TASKS_PATH.read_text(encoding="utf-8"))
-    for item in payload:
-        task = Task.model_validate(item)
-        TASKS[task.id] = task
 
 
 def derive_personalization_signals(
@@ -53,7 +39,4 @@ def derive_personalization_signals(
         focus_block_accept_rate=min(max(focus_block_accept_rate, 0.0), 1.0),
         focus_block_completion_rate=min(max(focus_block_completion_rate, 0.0), 1.0),
     )
-
-
-load_seed_tasks()
 

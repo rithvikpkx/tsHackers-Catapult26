@@ -64,9 +64,14 @@ class CalendarFocusBlockRequest(BaseModel):
     timezone: str = "UTC"
 
 
+class BrightspaceFeedImportRequest(BaseModel):
+    feed_url: str
+
+
 class CalendarConnectionStatus(BaseModel):
     provider: str = "google"
     connected: bool = False
+    oauth_configured: bool = False
     provider_user_email: Optional[str] = None
     expires_at: Optional[datetime] = None
     has_refresh_token: bool = False
