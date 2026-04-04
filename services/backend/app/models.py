@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Optional
 
@@ -14,6 +14,7 @@ class TaskStatus(str, Enum):
 
 class Task(BaseModel):
     id: str
+    user_id: Optional[str] = None
     title: str
     course: str
     due_date: datetime
@@ -23,6 +24,9 @@ class Task(BaseModel):
     failure_risk: Optional[float] = Field(default=None, ge=0, le=1)
     risk_explanation: Optional[str] = None
     status: TaskStatus = TaskStatus.TODO
+    source: str = "manual_import"
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class IngestRequest(BaseModel):
@@ -55,6 +59,7 @@ class CalendarFocusBlockRequest(BaseModel):
     title: str
     start: datetime
     end: datetime
+    timezone: str = "UTC"
 
 
 class TaskEventType(str, Enum):
@@ -80,4 +85,9 @@ class PersonalizationSignals(BaseModel):
     start_lag_hours: float = Field(ge=0)
     focus_block_accept_rate: float = Field(ge=0, le=1)
     focus_block_completion_rate: float = Field(ge=0, le=1)
+
+
+class AuthContext(BaseModel):
+    user_id: str
+    email: Optional[str] = None
 

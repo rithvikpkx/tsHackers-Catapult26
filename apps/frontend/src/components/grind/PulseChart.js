@@ -21,7 +21,7 @@ function buildSeed() {
   return buf;
 }
 
-export default function PulseChart() {
+export default function PulseChart({ restingRate = 68 }) {
   const canvasRef = useRef(null);
   const chartRef  = useRef(null);
   const bufRef    = useRef(buildSeed());
@@ -112,7 +112,7 @@ export default function PulseChart() {
     <div className="card">
       <div className="pulse-header">
         <span className="card-label" style={{ marginBottom: 0 }}>Pulse Board</span>
-        <span className="pulse-resting">Resting rate <strong>68</strong></span>
+        <span className="pulse-resting">Resting rate <strong>{restingRate}</strong></span>
       </div>
       <div className="pulse-canvas-wrap">
         <canvas ref={canvasRef} />

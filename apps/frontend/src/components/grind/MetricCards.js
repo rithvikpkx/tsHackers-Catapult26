@@ -13,9 +13,10 @@ export default function MetricCards({ metrics }) {
       </div>
       <div className="metric-card">
         <div className="metric-label">Distortion avg</div>
-        <div className="metric-value">{metrics.distortionMultiplier}×</div>
+        <div className="metric-value">{metrics.distortionMultiplier}x</div>
         <div className="metric-sub">You underestimate</div>
       </div>
     </div>
   );
 }
+

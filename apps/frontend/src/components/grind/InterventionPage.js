@@ -1,46 +1,55 @@
 import "./Intervention.css";
 
-const BEFORE = [
-  { time: "Thu 5:00 PM", label: "Gym",            type: "removed" },
-  { time: "Thu 7:00 PM", label: "Study group",    type: "moved"   },
-  { time: "Fri 11:59 PM", label: "OS due",        type: "neutral" },
-];
+function fmt(isoValue) {
+  return new Date(isoValue).toLocaleString();
+}
 
-const AFTER = [
-  { time: "Thu 6:00 PM – 10:00 PM", label: "Focus block: OS Problem Set", type: "added"   },
-  { time: "Fri 3:00 PM",            label: "Study group moved",            type: "moved"   },
-  { time: "Fri 4:30 PM",            label: "Gym removed from critical window", type: "removed" },
-];
+export default function InterventionPage({ plan, hotTask, loading }) {
+  if (loading) {
+    return <div className="intervention-page">Loading intervention plan...</div>;
+  }
 
-export default function InterventionPage() {
+  if (!plan || !hotTask) {
+    return (
+      <div className="intervention-page">
+        <div className="iv-header">
+          <div className="iv-risk-tag">Pipeline waiting</div>
+          <h1 className="iv-title">No intervention plan available yet</h1>
+          <p className="iv-desc">
+            Start backend, ingest tasks, and refresh to load live intervention values.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const riskBefore = Math.round((plan.risk_before || 0) * 100);
+  const riskAfter = Math.round((plan.risk_after || 0) * 100);
+
   return (
     <div className="intervention-page">
       <div className="iv-header">
-        <div className="iv-risk-tag">78% failure risk</div>
-        <h1 className="iv-title">Your OS Problem Set has a high chance of failing</h1>
-        <p className="iv-desc">
-          Based on your history, this assignment type takes about 5h 15m. You currently have
-          only 2h 30m of usable time before the deadline. Grind rescheduled two flexible
-          commitments to create a protected focus block.
-        </p>
+        <div className="iv-risk-tag">{riskBefore}% failure risk</div>
+        <h1 className="iv-title">{hotTask.title} has elevated failure risk</h1>
+        <p className="iv-desc">{hotTask.risk_explanation || "Backend generated an intervention plan."}</p>
       </div>
 
       <div className="iv-schedule">
         <div className="iv-col">
           <div className="iv-col-label">Before</div>
-          {BEFORE.map((item, i) => (
-            <div key={i} className={`iv-event ${item.type}`}>
-              <div className="iv-event-time">{item.time}</div>
+          {plan.before.map((item, i) => (
+            <div key={i} className="iv-event neutral">
+              <div className="iv-event-time">{fmt(item.start)} to {fmt(item.end)}</div>
               <div className="iv-event-label">{item.label}</div>
             </div>
           ))}
         </div>
-        <div className="iv-divider">→</div>
+        <div className="iv-divider">-&gt;</div>
         <div className="iv-col">
           <div className="iv-col-label">After</div>
-          {AFTER.map((item, i) => (
-            <div key={i} className={`iv-event ${item.type}`}>
-              <div className="iv-event-time">{item.time}</div>
+          {plan.after.map((item, i) => (
+            <div key={i} className="iv-event added">
+              <div className="iv-event-time">{fmt(item.start)} to {fmt(item.end)}</div>
               <div className="iv-event-label">{item.label}</div>
             </div>
           ))}
@@ -51,19 +60,20 @@ export default function InterventionPage() {
         <div className="iv-prob-row">
           <div className="iv-prob-block">
             <div className="iv-prob-label">Before</div>
-            <div className="iv-prob-num red">22%</div>
-            <div className="iv-prob-sub">success probability</div>
+            <div className="iv-prob-num red">{riskBefore}%</div>
+            <div className="iv-prob-sub">failure risk</div>
           </div>
-          <div className="iv-prob-arrow">→</div>
+          <div className="iv-prob-arrow">-&gt;</div>
           <div className="iv-prob-block">
             <div className="iv-prob-label">After</div>
-            <div className="iv-prob-num green">91%</div>
-            <div className="iv-prob-sub">success probability</div>
+            <div className="iv-prob-num green">{riskAfter}%</div>
+            <div className="iv-prob-sub">failure risk</div>
           </div>
         </div>
-        <p className="iv-cta-text">Start by 6:00 PM tonight to lock in this success rate.</p>
-        <button className="iv-start-btn">Open Start Mode →</button>
+        <p className="iv-cta-text">{plan.smallest_next_step}</p>
+        <button className="iv-start-btn">Open Start Mode -&gt;</button>
       </div>
     </div>
   );
 }
+

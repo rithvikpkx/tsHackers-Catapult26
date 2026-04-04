@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { RiskBadge, ActionButton } from './DesignSystem';
+import React, { useState } from "react";
+import { RiskBadge, ActionButton } from "./DesignSystem";
 
 const InterventionSummary = ({ data }) => {
   const [showDetails, setShowDetails] = useState(false);
@@ -23,7 +23,7 @@ const InterventionSummary = ({ data }) => {
               <span className="label">Before</span>
               <RiskBadge risk={data.originalRisk} size="large" />
             </div>
-            <div className="arrow">→</div>
+            <div className="arrow">-&gt;</div>
             <div className="stat">
               <span className="label">After</span>
               <RiskBadge risk={data.newRisk} size="large" />
@@ -37,7 +37,7 @@ const InterventionSummary = ({ data }) => {
         <ul className="changes-list">
           {data.changes.map((change, idx) => (
             <li key={idx}>
-              <span className="check">✓</span>
+              <span className="check">+</span>
               {change}
             </li>
           ))}
@@ -45,14 +45,14 @@ const InterventionSummary = ({ data }) => {
       </div>
 
       <div className="summary-actions">
-        <ActionButton 
-          label="Accept Changes" 
+        <ActionButton
+          label="Accept Changes"
           variant="primary"
           size="medium"
-          onClick={() => console.log('Changes accepted')}
+          onClick={() => console.log("Changes accepted")}
         />
-        <ActionButton 
-          label="View Details" 
+        <ActionButton
+          label="View Details"
           variant="secondary"
           size="medium"
           onClick={() => setShowDetails(!showDetails)}
@@ -63,3 +63,4 @@ const InterventionSummary = ({ data }) => {
 };
 
 export default InterventionSummary;
+

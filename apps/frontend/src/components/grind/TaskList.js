@@ -1,8 +1,11 @@
 export default function TaskList({ tasks }) {
+  const rows = tasks && tasks.length > 0 ? tasks : [
+    { id: "none", name: "No tasks loaded", subtitle: "Run ingest on backend", dot: "gray", badge: "low", label: "n/a" },
+  ];
   return (
     <div className="card">
       <div className="card-label">Today</div>
-      {tasks.map((task) => (
+      {rows.map((task) => (
         <div key={task.id} className="task-item">
           <span className={`task-dot ${task.dot}`} />
           <div className="task-info">
