@@ -22,8 +22,9 @@ uvicorn app.main:app --port 8001
 For the full local MVP on Windows, prefer launching everything from the repo root:
 
 ```powershell
-.\scripts\start_mvp.ps1
-.\scripts\check_mvp.ps1
+.\scripts\start_mvp.cmd
+.\scripts\check_mvp.cmd
+.\scripts\stop_mvp.cmd
 ```
 
 ## Train The OULAD Prior

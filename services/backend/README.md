@@ -34,8 +34,9 @@ See `docs/builder_a_backend_setup.md` for full runbook.
 From the repo root on Windows:
 
 ```powershell
-.\scripts\start_mvp.ps1
-.\scripts\check_mvp.ps1
+.\scripts\start_mvp.cmd
+.\scripts\check_mvp.cmd
+.\scripts\stop_mvp.cmd
 ```
 
 Notes:

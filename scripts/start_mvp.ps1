@@ -10,6 +10,38 @@ function Get-RepoRoot {
     return (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 }
 
+function Get-StateDirectory([string]$repoRoot) {
+    $stateDirectory = Join-Path $repoRoot ".grind-runtime"
+    New-Item -ItemType Directory -Force -Path $stateDirectory | Out-Null
+    return $stateDirectory
+}
+
+function Get-StatePath([string]$stateDirectory, [string]$serviceName) {
+    return Join-Path $stateDirectory "$serviceName.json"
+}
+
+function Get-TrackedProcess([string]$stateDirectory, [string]$serviceName) {
+    $statePath = Get-StatePath $stateDirectory $serviceName
+    if (-not (Test-Path $statePath)) {
+        return $null
+    }
+
+    try {
+        $record = Get-Content $statePath -Raw | ConvertFrom-Json
+    } catch {
+        Remove-Item $statePath -Force -ErrorAction SilentlyContinue
+        return $null
+    }
+
+    $process = Get-Process -Id $record.pid -ErrorAction SilentlyContinue
+    if (-not $process) {
+        Remove-Item $statePath -Force -ErrorAction SilentlyContinue
+        return $null
+    }
+
+    return $record
+}
+
 function Find-PythonInterpreter([string]$serviceRoot) {
     $candidates = @(
         ".venv312-win\Scripts\python.exe",
@@ -60,24 +92,43 @@ function Ensure-BackendEnv([string]$backendRoot) {
 }
 
 function Open-ServiceWindow(
+    [string]$serviceName,
     [string]$title,
     [string]$workingDirectory,
-    [string]$command
+    [string]$command,
+    [string]$stateDirectory
 ) {
+    $existing = Get-TrackedProcess $stateDirectory $serviceName
+    if ($existing) {
+        Write-Host "$title is already running in PowerShell process $($existing.pid)." -ForegroundColor Yellow
+        return
+    }
+
     $script = @"
 `$Host.UI.RawUI.WindowTitle = '$title'
 Set-Location '$workingDirectory'
 $command
 "@
 
-    Start-Process -FilePath "powershell.exe" -WorkingDirectory $workingDirectory -ArgumentList @(
+    $process = Start-Process -FilePath "powershell.exe" -WorkingDirectory $workingDirectory -ArgumentList @(
         "-NoExit",
         "-ExecutionPolicy", "Bypass",
         "-Command", $script
-    ) | Out-Null
+    ) -PassThru
+
+    @{
+        service = $serviceName
+        pid = $process.Id
+        title = $title
+        working_directory = $workingDirectory
+        started_at = (Get-Date).ToString("o")
+    } | ConvertTo-Json | Set-Content -Path (Get-StatePath $stateDirectory $serviceName) -Encoding ASCII
+
+    Write-Host "Started $title in PowerShell process $($process.Id)." -ForegroundColor Green
 }
 
 $repoRoot = Get-RepoRoot
+$stateDirectory = Get-StateDirectory $repoRoot
 $backendRoot = Join-Path $repoRoot "services\backend"
 $mlRoot = Join-Path $repoRoot "services\ml"
 $frontendRoot = Join-Path $repoRoot "apps\frontend"
@@ -88,30 +139,37 @@ Ensure-FrontendEnv $frontendRoot
 if (-not $SkipMl) {
     $mlPython = Find-PythonInterpreter $mlRoot
     Open-ServiceWindow `
+        -serviceName "ml" `
         -title "GRIND ML" `
         -workingDirectory $mlRoot `
-        -command "& '$mlPython' -m uvicorn app.main:app --port 8001"
+        -command "& '$mlPython' -m uvicorn app.main:app --port 8001" `
+        -stateDirectory $stateDirectory
 }
 
 if (-not $SkipBackend) {
     $backendPython = Find-PythonInterpreter $backendRoot
     Open-ServiceWindow `
+        -serviceName "backend" `
         -title "GRIND Backend" `
         -workingDirectory $backendRoot `
-        -command "& '$backendPython' -m uvicorn app.main:app --port 8000"
+        -command "& '$backendPython' -m uvicorn app.main:app --port 8000" `
+        -stateDirectory $stateDirectory
 }
 
 if (-not $SkipFrontend) {
     $npmPath = Find-Npm
     Open-ServiceWindow `
+        -serviceName "frontend" `
         -title "GRIND Frontend" `
         -workingDirectory $frontendRoot `
-        -command "`$env:BROWSER='none'; `$env:REACT_APP_BACKEND_URL='http://127.0.0.1:8000'; & '$npmPath' run dev"
+        -command "`$env:BROWSER='none'; `$env:REACT_APP_BACKEND_URL='http://127.0.0.1:8000'; & '$npmPath' run dev" `
+        -stateDirectory $stateDirectory
 }
 
 Write-Host ""
 Write-Host "Started the GRIND MVP services in separate PowerShell windows." -ForegroundColor Green
-Write-Host "Next: run .\scripts\check_mvp.ps1 after 10-15 seconds." -ForegroundColor Green
+Write-Host "Next: run .\scripts\check_mvp.cmd after 10-15 seconds." -ForegroundColor Green
+Write-Host "Use .\scripts\stop_mvp.cmd to close the tracked service windows later." -ForegroundColor Green
 Write-Host ""
 Write-Host "Frontend: http://127.0.0.1:3000"
 Write-Host "Backend:  http://127.0.0.1:8000/health"

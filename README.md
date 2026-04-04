@@ -58,14 +58,17 @@ The current ML layer includes:
 Windows quick start:
 
 ```powershell
-.\scripts\start_mvp.ps1
-.\scripts\check_mvp.ps1
+.\scripts\start_mvp.cmd
+.\scripts\check_mvp.cmd
+.\scripts\stop_mvp.cmd
 ```
 
 That opens three PowerShell windows for:
 - frontend on `http://127.0.0.1:3000`
 - backend on `http://127.0.0.1:8000`
 - ML on `http://127.0.0.1:8001`
+
+`stop_mvp.cmd` closes the tracked frontend, backend, and ML PowerShell windows that `start_mvp.cmd` launched.
 
 First-run flow:
 - sign in locally
