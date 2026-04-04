@@ -19,15 +19,21 @@ def load_seed_tasks() -> None:
         TASKS[task.id] = task
 
 
-def derive_personalization_signals() -> PersonalizationSignals:
-    created = sum(1 for event in TASK_EVENTS if event.event_type == TaskEventType.TASK_CREATED)
-    completed = sum(1 for event in TASK_EVENTS if event.event_type == TaskEventType.TASK_COMPLETED)
-    overdue = sum(1 for event in TASK_EVENTS if event.event_type == TaskEventType.TASK_OVERDUE)
-    accepted = sum(1 for event in TASK_EVENTS if event.event_type == TaskEventType.FOCUS_BLOCK_ACCEPTED)
-    focus_completed = sum(1 for event in TASK_EVENTS if event.event_type == TaskEventType.FOCUS_BLOCK_COMPLETED)
+def derive_personalization_signals(user_id: str | None = None) -> PersonalizationSignals:
+    relevant_events = TASK_EVENTS
+    if user_id:
+        relevant_events = [event for event in TASK_EVENTS if event.metadata.get("user_id") == user_id]
+
+    created = sum(1 for event in relevant_events if event.event_type == TaskEventType.TASK_CREATED)
+    completed = sum(1 for event in relevant_events if event.event_type == TaskEventType.TASK_COMPLETED)
+    overdue = sum(1 for event in relevant_events if event.event_type == TaskEventType.TASK_OVERDUE)
+    accepted = sum(1 for event in relevant_events if event.event_type == TaskEventType.FOCUS_BLOCK_ACCEPTED)
+    focus_completed = sum(
+        1 for event in relevant_events if event.event_type == TaskEventType.FOCUS_BLOCK_COMPLETED
+    )
     start_lags = [
         float(event.metadata.get("start_lag_hours", 0.0))
-        for event in TASK_EVENTS
+        for event in relevant_events
         if event.event_type == TaskEventType.TASK_STARTED
     ]
 

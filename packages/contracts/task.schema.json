@@ -12,6 +12,7 @@
   ],
   "properties": {
     "id": { "type": "string" },
+    "user_id": { "type": "string" },
     "title": { "type": "string" },
     "course": { "type": "string" },
     "due_date": { "type": "string", "format": "date-time" },
@@ -23,7 +24,10 @@
     "status": {
       "type": "string",
       "enum": ["todo", "in_progress", "blocked", "done"]
-    }
+    },
+    "source": { "type": "string" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
   },
   "additionalProperties": false
 }

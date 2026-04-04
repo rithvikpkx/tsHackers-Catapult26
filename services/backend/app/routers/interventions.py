@@ -2,15 +2,16 @@ from datetime import timedelta
 
 from fastapi import APIRouter, HTTPException
 
+from app.auth import AuthDep
 from app.models import InterventionRequest, InterventionResponse, ScheduleBlock
-from app.store import TASKS
+from app.repos.tasks_repo import get_task_by_id
 
 router = APIRouter(prefix="/api/interventions", tags=["interventions"])
 
 
 @router.post("/plan", response_model=InterventionResponse)
-def plan_intervention(payload: InterventionRequest) -> InterventionResponse:
-    task = TASKS.get(payload.task_id)
+def plan_intervention(payload: InterventionRequest, auth=AuthDep) -> InterventionResponse:
+    task = get_task_by_id(auth.user_id, payload.task_id)
     if task is None:
         raise HTTPException(status_code=404, detail="Task not found")
 
