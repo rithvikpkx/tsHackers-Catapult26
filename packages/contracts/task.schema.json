@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Task",
+  "type": "object",
+  "required": [
+    "id",
+    "title",
+    "course",
+    "due_date",
+    "estimated_effort_hours",
+    "status"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "title": { "type": "string" },
+    "course": { "type": "string" },
+    "due_date": { "type": "string", "format": "date-time" },
+    "estimated_effort_hours": { "type": "number", "minimum": 0 },
+    "corrected_effort_hours": { "type": "number", "minimum": 0 },
+    "failure_risk": { "type": "number", "minimum": 0, "maximum": 1 },
+    "status": {
+      "type": "string",
+      "enum": ["todo", "in_progress", "blocked", "done"]
+    }
+  },
+  "additionalProperties": false
+}
+

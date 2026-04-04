@@ -1,0 +1,23 @@
+[
+  {
+    "id": "task-cs-pset-4",
+    "title": "CS 340 Problem Set 4",
+    "course": "CS 340",
+    "due_date": "2026-04-08T23:59:00Z",
+    "estimated_effort_hours": 3.0,
+    "corrected_effort_hours": 6.0,
+    "failure_risk": 0.82,
+    "status": "todo"
+  },
+  {
+    "id": "task-stat-quiz",
+    "title": "STAT 301 Quiz Prep",
+    "course": "STAT 301",
+    "due_date": "2026-04-07T16:00:00Z",
+    "estimated_effort_hours": 1.5,
+    "corrected_effort_hours": 2.4,
+    "failure_risk": 0.58,
+    "status": "in_progress"
+  }
+]
+
