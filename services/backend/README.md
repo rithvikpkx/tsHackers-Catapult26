@@ -24,7 +24,21 @@ Backend owns the path from incoming assignments to calendar intervention.
 python -m venv .venv
 .venv\\Scripts\\activate
 pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --port 8000
 ```
 
 See `docs/builder_a_backend_setup.md` for full runbook.
+
+## Fastest Local MVP Flow
+
+From the repo root on Windows:
+
+```powershell
+.\scripts\start_mvp.ps1
+.\scripts\check_mvp.ps1
+```
+
+Notes:
+- `services/backend/.env` can stay in local `AUTH_BYPASS=true` mode for MVP demos.
+- Add `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` if you want live Google Calendar connect.
+- If Google credentials are missing, onboarding will guide users to the Brightspace `.ics` import path instead.

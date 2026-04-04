@@ -53,7 +53,27 @@ The current ML layer includes:
 - a plain-English risk explanation for Builder B's surfaces
 - seeded demo task outputs for Builder A/B integration
 
-## Quick Start
+## MVP Startup
+
+Windows quick start:
+
+```powershell
+.\scripts\start_mvp.ps1
+.\scripts\check_mvp.ps1
+```
+
+That opens three PowerShell windows for:
+- frontend on `http://127.0.0.1:3000`
+- backend on `http://127.0.0.1:8000`
+- ML on `http://127.0.0.1:8001`
+
+First-run flow:
+- sign in locally
+- connect Google Calendar if `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are set in `services/backend/.env`
+- or paste a Brightspace `.ics` calendar feed URL in onboarding
+- continue into the dashboard once your real schedule or Brightspace tasks are loaded
+
+## Manual Run
 
 Backend:
 
@@ -62,7 +82,7 @@ cd services/backend
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --port 8000
 ```
 
 ML service:
@@ -72,22 +92,23 @@ cd services/ml
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8001
-```
-
-Builder C starter pipeline:
-
-```bash
-set OULAD_DATA_DIR=C:\path\to\oulad
-python -m builder_c.starter.train_models
-python -m builder_c.starter.run_demo
-python -m unittest builder_c.tests.test_pipeline
+uvicorn app.main:app --port 8001
 ```
 
 Frontend:
 
 ```bash
 cd apps/frontend
-npm install
+copy .env.example .env
+npm install --legacy-peer-deps
 npm run dev
+```
+
+## Train The OULAD Prior
+
+```bash
+set OULAD_DATA_DIR=C:\path\to\oulad
+python -m builder_c.starter.train_models
+python -m builder_c.starter.run_demo
+python -m unittest builder_c.tests.test_pipeline
 ```

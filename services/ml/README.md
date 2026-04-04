@@ -16,7 +16,14 @@ FastAPI service for the OULAD bootstrap risk prior and the final Grind task-risk
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8001
+uvicorn app.main:app --port 8001
+```
+
+For the full local MVP on Windows, prefer launching everything from the repo root:
+
+```powershell
+.\scripts\start_mvp.ps1
+.\scripts\check_mvp.ps1
 ```
 
 ## Train The OULAD Prior
