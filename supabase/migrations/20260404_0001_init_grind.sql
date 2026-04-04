@@ -33,6 +33,8 @@ create table if not exists public.tasks (
   id text not null,
   user_id uuid not null references auth.users(id) on delete cascade,
   course text not null,
+  task_type text,
+  course_snapshot jsonb,
   title text not null,
   due_date timestamptz not null,
   estimated_effort_hours double precision not null check (estimated_effort_hours >= 0),
@@ -94,6 +96,9 @@ create table if not exists public.ingestion_runs (
 
 create index if not exists idx_tasks_user_due_date on public.tasks(user_id, due_date);
 create index if not exists idx_task_events_user_time on public.task_events(user_id, occurred_at desc);
+
+alter table public.tasks add column if not exists task_type text;
+alter table public.tasks add column if not exists course_snapshot jsonb;
 
 alter table public.profiles enable row level security;
 alter table public.courses enable row level security;

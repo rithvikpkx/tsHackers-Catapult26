@@ -17,6 +17,8 @@ class Task(BaseModel):
     user_id: Optional[str] = None
     title: str
     course: str
+    task_type: Optional[str] = None
+    course_snapshot: Optional[dict[str, Any]] = None
     due_date: datetime
     estimated_effort_hours: float = Field(ge=0)
     corrected_effort_hours: Optional[float] = Field(default=None, ge=0)
@@ -42,7 +44,7 @@ class ScheduleBlock(BaseModel):
 
 class InterventionRequest(BaseModel):
     task_id: str
-    current_schedule: list[ScheduleBlock]
+    current_schedule: list[ScheduleBlock] = Field(default_factory=list)
 
 
 class InterventionResponse(BaseModel):
@@ -62,6 +64,21 @@ class CalendarFocusBlockRequest(BaseModel):
     timezone: str = "UTC"
 
 
+class CalendarConnectionStatus(BaseModel):
+    provider: str = "google"
+    connected: bool = False
+    provider_user_email: Optional[str] = None
+    expires_at: Optional[datetime] = None
+    has_refresh_token: bool = False
+
+
+class CalendarSyncResponse(BaseModel):
+    status: CalendarConnectionStatus
+    window_start: datetime
+    window_end: datetime
+    blocks: list[ScheduleBlock] = Field(default_factory=list)
+
+
 class TaskEventType(str, Enum):
     TASK_CREATED = "task_created"
     ESTIMATE_UPDATED = "estimate_updated"
@@ -77,6 +94,10 @@ class TaskEvent(BaseModel):
     task_id: str
     occurred_at: datetime
     metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class TaskStatusUpdate(BaseModel):
+    status: TaskStatus
 
 
 class PersonalizationSignals(BaseModel):

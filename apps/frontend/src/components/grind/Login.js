@@ -18,8 +18,8 @@ export default function Login({ onLogin }) {
       setError("All fields are required.");
       return;
     }
-    if (!form.email.endsWith("@purdue.edu")) {
-      setError("Must be a @purdue.edu email.");
+    if (!form.email.includes("@")) {
+      setError("Enter a valid email address.");
       return;
     }
     onLogin(form);
@@ -32,37 +32,63 @@ export default function Login({ onLogin }) {
           <span className="login-dot" />
           <span className="login-brand">GRIND</span>
         </div>
-        <h1 className="login-title">Know yourself.<br />Beat the semester.</h1>
+        <h1 className="login-title">
+          Know yourself.
+          <br />
+          Beat the semester.
+        </h1>
         <p className="login-sub">Your personal academic operator.</p>
 
         <form onSubmit={submit} className="login-form">
           <div className="login-row">
             <div className="login-field">
               <label>First name</label>
-              <input name="firstName" value={form.firstName} onChange={handle} placeholder="Rithvik" autoComplete="off" />
+              <input
+                name="firstName"
+                value={form.firstName}
+                onChange={handle}
+                placeholder="Atharv"
+                autoComplete="off"
+              />
             </div>
             <div className="login-field">
               <label>Last name</label>
-              <input name="lastName" value={form.lastName} onChange={handle} placeholder="Sharma" autoComplete="off" />
+              <input
+                name="lastName"
+                value={form.lastName}
+                onChange={handle}
+                placeholder="Parsewar"
+                autoComplete="off"
+              />
             </div>
           </div>
 
           <div className="login-field">
-            <label>Purdue email</label>
-            <input name="email" value={form.email} onChange={handle} placeholder="rithvik@purdue.edu" type="email" autoComplete="off" />
+            <label>Email</label>
+            <input
+              name="email"
+              value={form.email}
+              onChange={handle}
+              placeholder="atharv@example.com"
+              type="email"
+              autoComplete="off"
+            />
           </div>
 
           <div className="login-field">
             <label>Grade year</label>
             <div className="grade-pills">
-              {GRADE_YEARS.map((y) => (
+              {GRADE_YEARS.map((year) => (
                 <button
-                  key={y}
+                  key={year}
                   type="button"
-                  className={`grade-pill ${form.gradeYear === y ? "active" : ""}`}
-                  onClick={() => { setForm({ ...form, gradeYear: y }); setError(""); }}
+                  className={`grade-pill ${form.gradeYear === year ? "active" : ""}`}
+                  onClick={() => {
+                    setForm({ ...form, gradeYear: year });
+                    setError("");
+                  }}
                 >
-                  {y}
+                  {year}
                 </button>
               ))}
             </div>
@@ -71,7 +97,7 @@ export default function Login({ onLogin }) {
           {error && <p className="login-error">{error}</p>}
 
           <button type="submit" className="login-submit">
-            Start grinding →
+            Start grinding ->
           </button>
         </form>
       </div>

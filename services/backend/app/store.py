@@ -1,10 +1,12 @@
 import json
 from pathlib import Path
+from typing import Any
 
 from app.models import PersonalizationSignals, Task, TaskEvent, TaskEventType
 
 TASKS: dict[str, Task] = {}
 TASK_EVENTS: list[TaskEvent] = []
+CALENDAR_CONNECTIONS: dict[str, dict[str, Any]] = {}
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 SEED_TASKS_PATH = PROJECT_ROOT / "data" / "seed" / "tasks.json"
@@ -19,10 +21,12 @@ def load_seed_tasks() -> None:
         TASKS[task.id] = task
 
 
-def derive_personalization_signals(user_id: str | None = None) -> PersonalizationSignals:
-    relevant_events = TASK_EVENTS
+def derive_personalization_signals(
+    user_id: str | None = None, events: list[TaskEvent] | None = None
+) -> PersonalizationSignals:
+    relevant_events = events if events is not None else TASK_EVENTS
     if user_id:
-        relevant_events = [event for event in TASK_EVENTS if event.metadata.get("user_id") == user_id]
+        relevant_events = [event for event in relevant_events if event.metadata.get("user_id") == user_id]
 
     created = sum(1 for event in relevant_events if event.event_type == TaskEventType.TASK_CREATED)
     completed = sum(1 for event in relevant_events if event.event_type == TaskEventType.TASK_COMPLETED)

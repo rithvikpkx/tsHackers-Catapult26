@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import ScheduleCalendar from './ScheduleCalendar';
 import InterventionSummary from './InterventionSummary';
 import { LoadingState } from './DesignSystem';
 import './UpdatedSchedule.css';
 
-const UpdatedSchedulePage = ({ interventionData, loading }) => {
-  const [showFallback] = useState(!interventionData);
+const UpdatedSchedulePage = ({ interventionData, loading, onAccept, acceptLabel, actionBusy }) => {
+  const showFallback = !interventionData;
   const fallbackData = {
     taskName: 'No plan available',
     originalRisk: 0,
@@ -37,7 +37,12 @@ const UpdatedSchedulePage = ({ interventionData, loading }) => {
         </div>
         
         <aside className="schedule-sidebar">
-          <InterventionSummary data={data} />
+          <InterventionSummary
+            data={data}
+            onAccept={showFallback ? undefined : onAccept}
+            acceptLabel={acceptLabel}
+            actionBusy={actionBusy}
+          />
         </aside>
       </div>
     </div>

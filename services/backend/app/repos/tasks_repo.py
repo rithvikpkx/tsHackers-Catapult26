@@ -25,6 +25,8 @@ def _row_to_task(row: dict) -> Task:
         user_id=row["user_id"],
         title=row["title"],
         course=row["course"],
+        task_type=row.get("task_type"),
+        course_snapshot=row.get("course_snapshot"),
         due_date=row["due_date"],
         estimated_effort_hours=row["estimated_effort_hours"],
         corrected_effort_hours=row.get("corrected_effort_hours"),
@@ -53,13 +55,14 @@ def list_tasks(user_id: str) -> list[Task]:
     return [_row_to_task(row) for row in response.data or []]
 
 
-def upsert_tasks(user_id: str, tasks: list[Task], source: str) -> int:
+def upsert_tasks(user_id: str, tasks: list[Task], source: str | None = None) -> int:
     client = _service_client()
     now = datetime.now(timezone.utc)
     payload = []
     for task in tasks:
         task.user_id = user_id
-        task.source = source
+        if source is not None:
+            task.source = source
         task.updated_at = now
         if not task.created_at:
             task.created_at = now
@@ -69,6 +72,8 @@ def upsert_tasks(user_id: str, tasks: list[Task], source: str) -> int:
                 "user_id": user_id,
                 "title": task.title,
                 "course": task.course,
+                "task_type": task.task_type,
+                "course_snapshot": task.course_snapshot,
                 "due_date": task.due_date.isoformat(),
                 "estimated_effort_hours": task.estimated_effort_hours,
                 "corrected_effort_hours": task.corrected_effort_hours,
@@ -76,7 +81,7 @@ def upsert_tasks(user_id: str, tasks: list[Task], source: str) -> int:
                 "failure_risk": task.failure_risk,
                 "risk_explanation": task.risk_explanation,
                 "status": task.status.value,
-                "source": source,
+                "source": task.source,
                 "created_at": task.created_at.isoformat(),
                 "updated_at": now.isoformat(),
             }

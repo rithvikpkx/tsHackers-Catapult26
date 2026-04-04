@@ -12,9 +12,9 @@ export default function MetricCards({ metrics }) {
         <div className="metric-sub">This week</div>
       </div>
       <div className="metric-card">
-        <div className="metric-label">Distortion avg</div>
-        <div className="metric-value">{metrics.distortionMultiplier}x</div>
-        <div className="metric-sub">You underestimate</div>
+        <div className="metric-label">Calendar load</div>
+        <div className="metric-value">{metrics.calendarHours}h</div>
+        <div className="metric-sub">Busy time next 7d</div>
       </div>
     </div>
   );

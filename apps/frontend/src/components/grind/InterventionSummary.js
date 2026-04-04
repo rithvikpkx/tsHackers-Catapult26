@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { RiskBadge, ActionButton } from "./DesignSystem";
 
-const InterventionSummary = ({ data }) => {
+const InterventionSummary = ({ data, onAccept, acceptLabel = "Accept changes", actionBusy = false }) => {
   const [showDetails, setShowDetails] = useState(false);
 
   return (
@@ -46,18 +46,30 @@ const InterventionSummary = ({ data }) => {
 
       <div className="summary-actions">
         <ActionButton
-          label="Accept Changes"
+          label={acceptLabel}
           variant="primary"
           size="medium"
-          onClick={() => console.log("Changes accepted")}
+          onClick={onAccept}
+          disabled={!onAccept}
+          loading={actionBusy}
         />
         <ActionButton
-          label="View Details"
+          label={showDetails ? "Hide details" : "View details"}
           variant="secondary"
           size="medium"
           onClick={() => setShowDetails(!showDetails)}
         />
       </div>
+
+      {showDetails && (
+        <div className="summary-section">
+          <h4>Why this helps</h4>
+          <p className="summary-task">
+            The new plan protects dedicated work time before the deadline and gives you a smaller next step to
+            start from.
+          </p>
+        </div>
+      )}
     </div>
   );
 };

@@ -3,7 +3,18 @@ import ScheduleBlock from './ScheduleBlock';
 
 const ScheduleCalendar = ({ blocks }) => {
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  const hours = Array.from({ length: 12 }, (_, i) => i + 8); // 8 AM to 8 PM
+  const hours = Array.from({ length: 14 }, (_, i) => i + 8); // 8 AM to 9 PM
+
+  const parseHour = (block) => {
+    if (Number.isFinite(block.slotHour)) return block.slotHour;
+    const match = String(block.time || "").match(/(\d+):/);
+    if (!match) return -1;
+    const hour = parseInt(match[1], 10);
+    const isPm = String(block.time).includes("PM") && hour !== 12;
+    const isMidnight = String(block.time).includes("AM") && hour === 12;
+    if (isMidnight) return 0;
+    return isPm ? hour + 12 : hour;
+  };
 
   // Group blocks by day
   const blocksByDay = {};
@@ -35,7 +46,7 @@ const ScheduleCalendar = ({ blocks }) => {
               <div key={`${day}-${hour}`} className="day-slot">
                 {blocksByDay[day]
                   .filter(block => {
-                    const blockHour = parseInt(block.time.split(':')[0]);
+                    const blockHour = parseHour(block);
                     return blockHour === hour;
                   })
                   .map((block, idx) => (

@@ -1,10 +1,14 @@
-from datetime import timedelta
-
 from fastapi import APIRouter, HTTPException
 
 from app.auth import AuthDep
-from app.models import InterventionRequest, InterventionResponse, ScheduleBlock
+from app.models import InterventionRequest, InterventionResponse
 from app.repos.tasks_repo import get_task_by_id
+from app.services.intervention_planner import (
+    build_smallest_next_step,
+    choose_focus_block,
+    estimate_risk_after,
+    normalize_schedule,
+)
 
 router = APIRouter(prefix="/api/interventions", tags=["interventions"])
 
@@ -15,21 +19,17 @@ def plan_intervention(payload: InterventionRequest, auth=AuthDep) -> Interventio
     if task is None:
         raise HTTPException(status_code=404, detail="Task not found")
 
-    now_blocks = payload.current_schedule
-    focus_start = task.due_date - timedelta(hours=10)
-    focus_end = focus_start + timedelta(hours=2)
-    intervention_block = ScheduleBlock(
-        start=focus_start,
-        end=focus_end,
-        label=f"Focus: {task.title}",
-    )
+    now_blocks = normalize_schedule(payload.current_schedule)
+    intervention_block = choose_focus_block(task, now_blocks)
+    risk_before = task.failure_risk or task.course_risk_prior or 0.5
+    risk_after = estimate_risk_after(task, intervention_block)
 
     return InterventionResponse(
         task_id=task.id,
-        risk_before=task.failure_risk or task.course_risk_prior or 0.72,
-        risk_after=max(0.15, (task.failure_risk or task.course_risk_prior or 0.72) - 0.3),
+        risk_before=risk_before,
+        risk_after=risk_after,
         before=now_blocks,
         after=now_blocks + [intervention_block],
-        smallest_next_step="Open notes and solve only question 1 for 10 minutes.",
+        smallest_next_step=build_smallest_next_step(task),
     )
 
