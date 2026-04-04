@@ -1,0 +1,24 @@
+{
+  "request": {
+    "task_id": "os-problem-set-4",
+    "title": "OS problem set 4",
+    "course": "Operating Systems",
+    "task_type": "problem_set",
+    "estimate_hours": 4.0,
+    "hours_until_due": 30.0,
+    "start_delay_hours": 18.0,
+    "weekly_course_load": 16.0
+  },
+  "response": {
+    "task_id": "os-problem-set-4",
+    "title": "OS problem set 4",
+    "course": "Operating Systems",
+    "task_type": "problem_set",
+    "estimate_hours": 4.0,
+    "corrected_effort_hours": 7.48,
+    "distortion_multiplier": 1.87,
+    "failure_probability": 0.98,
+    "risk_bucket": "high",
+    "risk_explanation": "This task is high risk because the corrected effort is heavy for the realistic focus time left, the deadline is close, the work is starting late, and the rest of the week is already crowded."
+  }
+}

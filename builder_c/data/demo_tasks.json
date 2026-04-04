@@ -1,0 +1,42 @@
+[
+  {
+    "task_id": "os-problem-set-rescue",
+    "title": "OS problem set 4",
+    "course": "Operating Systems",
+    "task_type": "problem_set",
+    "estimate_hours": 4.0,
+    "hours_until_due": 30.0,
+    "start_delay_hours": 18.0,
+    "weekly_course_load": 16.0
+  },
+  {
+    "task_id": "db-lab-report-demo",
+    "title": "DB lab report",
+    "course": "Databases",
+    "task_type": "lab",
+    "estimate_hours": 2.5,
+    "hours_until_due": 56.0,
+    "start_delay_hours": 8.0,
+    "weekly_course_load": 14.0
+  },
+  {
+    "task_id": "history-reading-demo",
+    "title": "History reading response",
+    "course": "History",
+    "task_type": "reading",
+    "estimate_hours": 1.5,
+    "hours_until_due": 22.0,
+    "start_delay_hours": 9.0,
+    "weekly_course_load": 17.0
+  },
+  {
+    "task_id": "ai-project-demo",
+    "title": "AI project checkpoint",
+    "course": "Applied AI",
+    "task_type": "project",
+    "estimate_hours": 5.5,
+    "hours_until_due": 42.0,
+    "start_delay_hours": 14.0,
+    "weekly_course_load": 15.0
+  }
+]
