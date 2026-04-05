@@ -8,6 +8,8 @@ __pycache__/
 node_modules/
 .next/
 dist/
+apps/frontend/build/
+apps/frontend/build-temp/
 
 # Env
 .env

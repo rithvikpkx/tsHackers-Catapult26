@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class TaskStatus(str, Enum):
@@ -80,4 +80,47 @@ class PersonalizationSignals(BaseModel):
     start_lag_hours: float = Field(ge=0)
     focus_block_accept_rate: float = Field(ge=0, le=1)
     focus_block_completion_rate: float = Field(ge=0, le=1)
+
+
+class BrightspaceImportRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, str_strip_whitespace=True)
+
+    first_name: str = Field(min_length=1, alias="firstName")
+    last_name: str = Field(min_length=1, alias="lastName")
+    grade_year: str = Field(min_length=1, alias="gradeYear")
+    email: str = Field(min_length=3)
+    brightspace_calendar_url: str = Field(min_length=12, alias="brightspaceCalendarUrl")
+
+
+class DashboardTask(BaseModel):
+    id: str
+    name: str
+    subtitle: str
+    dot: str
+    badge: str
+    label: str
+
+
+class DashboardMetrics(BaseModel):
+    healthScore: int = Field(ge=0, le=100)
+    healthLabel: str
+    atRiskCount: int = Field(ge=0)
+    distortionMultiplier: float = Field(ge=1.0)
+
+
+class DashboardIntervention(BaseModel):
+    probBefore: int = Field(ge=0, le=100)
+    probAfter: int = Field(ge=0, le=100)
+    description: str
+
+
+class BrightspaceImportResponse(BaseModel):
+    source: str
+    importedCount: int = Field(ge=0)
+    summary: str
+    restingRate: int = Field(ge=40, le=120)
+    tasks: list[DashboardTask]
+    distortion: list[str]
+    metrics: DashboardMetrics
+    intervention: DashboardIntervention
 

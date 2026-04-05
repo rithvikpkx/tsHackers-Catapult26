@@ -1,38 +1,26 @@
 [
   {
-    "id": "task-cs-pset-4",
-    "title": "CS 340 Problem Set 4",
-    "course": "CS 340",
-    "due_date": "2026-04-08T23:59:00Z",
-    "estimated_effort_hours": 3.0,
-    "corrected_effort_hours": 6.0,
-    "course_risk_prior": 0.9,
-    "failure_risk": 0.91,
-    "risk_explanation": "This task is high risk because the course itself is already showing risk, the deadline is close, and recent misses are stacking up. The course context already looks risky because an early assessment is still missing and there have already been previous attempts.",
-    "status": "todo"
+    "id": "cs-240-cs-240-overdue-lab-04040002",
+    "title": "CS 240 Overdue Lab",
+    "course": "CS 240",
+    "due_date": "2026-04-04T00:02:30Z",
+    "estimated_effort_hours": 2.5,
+    "corrected_effort_hours": 6.96,
+    "course_risk_prior": 0.77,
+    "failure_risk": 0.96,
+    "risk_explanation": "This task is high risk because the course itself is already showing risk, the deadline is close, and the task is starting late. The course context already looks risky because an early assessment is still missing.",
+    "status": "blocked"
   },
   {
-    "id": "task-stat-quiz",
-    "title": "STAT 301 Quiz Prep",
-    "course": "STAT 301",
-    "due_date": "2026-04-07T16:00:00Z",
-    "estimated_effort_hours": 1.5,
-    "corrected_effort_hours": 2.4,
-    "course_risk_prior": 0.31,
-    "failure_risk": 0.38,
-    "risk_explanation": "This task is lower risk because the deadline is close. The course prior is steady because early coursework and engagement look healthy.",
-    "status": "in_progress"
-  },
-  {
-    "id": "task-design-reading",
-    "title": "Design reading response",
-    "course": "DES 210",
-    "due_date": "2026-04-10T18:00:00Z",
-    "estimated_effort_hours": 1.0,
-    "corrected_effort_hours": 1.3,
-    "course_risk_prior": 0.14,
-    "failure_risk": 0.25,
-    "risk_explanation": "This task is lower risk because the course prior is calm and the task timing is still workable. The course prior is steady because early coursework and engagement look healthy.",
+    "id": "cs-240-cs-240-upcoming-quiz-04070002",
+    "title": "CS 240 Upcoming Quiz",
+    "course": "CS 240",
+    "due_date": "2026-04-07T00:02:30Z",
+    "estimated_effort_hours": 1.75,
+    "corrected_effort_hours": 4.63,
+    "course_risk_prior": 0.77,
+    "failure_risk": 0.73,
+    "risk_explanation": "This task is high risk because the course itself is already showing risk, the task is starting late, and recent misses are stacking up. The course context already looks risky because an early assessment is still missing.",
     "status": "todo"
   }
 ]

@@ -19,6 +19,15 @@ def load_seed_tasks() -> None:
         TASKS[task.id] = task
 
 
+def replace_tasks(tasks: list[Task]) -> None:
+    TASKS.clear()
+    for task in tasks:
+        TASKS[task.id] = task
+    SEED_TASKS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    serialized = [task.model_dump(mode="json") for task in tasks]
+    SEED_TASKS_PATH.write_text(json.dumps(serialized, indent=2), encoding="utf-8")
+
+
 def derive_personalization_signals() -> PersonalizationSignals:
     created = sum(1 for event in TASK_EVENTS if event.event_type == TaskEventType.TASK_CREATED)
     completed = sum(1 for event in TASK_EVENTS if event.event_type == TaskEventType.TASK_COMPLETED)
