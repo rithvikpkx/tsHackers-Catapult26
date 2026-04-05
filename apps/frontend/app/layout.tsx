@@ -23,7 +23,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en">
       <body className="bg-canvas text-ink">
-        <div className="relative z-0 mx-auto flex min-h-screen w-full max-w-7xl flex-col px-5 pb-12 pt-6 sm:px-8 lg:px-10">
+        <div className="relative z-0 mx-auto flex min-h-screen w-full max-w-7xl flex-col px-5 pb-12 pt-6 sm:px-8 lg:px-10" suppressHydrationWarning={true}>
           <header className="relative z-[220] mb-8 flex flex-col gap-4 rounded-card border border-line/80 bg-surface/90 px-5 py-4 shadow-soft backdrop-blur sm:flex-row sm:items-center sm:justify-between">
             <div>
               <Link href="/" className="text-xl font-semibold tracking-[-0.04em]">
