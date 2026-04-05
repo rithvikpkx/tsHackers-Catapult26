@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { SectionCard } from "@/components/section-card";
 import { loadScenario } from "@/app/lib/api";
 import { formatMinutes, formatPercent, formatShortDate } from "@/lib/grind/ui/format";
 
@@ -10,46 +9,79 @@ export default async function TasksPage() {
     <main className="space-y-5">
       <section className="rounded-card border border-line bg-surface/95 p-6 shadow-soft">
         <p className="text-xs uppercase tracking-[0.18em] text-muted">Tasks</p>
-        <h1 className="mt-2 text-4xl font-semibold tracking-[-0.06em]">Concrete work, not vague assignments.</h1>
-        <p className="mt-3 max-w-2xl text-base leading-7 text-muted">
-          Every imported assignment is broken into specific next actions. Progress starts when the first subtask starts and ends at submission.
-        </p>
+        <h1 className="mt-2 text-4xl font-semibold tracking-[-0.06em]">Queue</h1>
       </section>
 
-      <div className="grid gap-5 xl:grid-cols-2">
+      <div className="space-y-4">
         {snapshot.tasks.map((task) => (
-          <SectionCard key={task.id} title={task.title} eyebrow={`${task.assignmentType.replaceAll("_", " ")} · ${task.subject.toUpperCase()}`}>
-            <div className="space-y-4">
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-3xl bg-canvas px-4 py-3">
-                  <p className="text-sm text-muted">Risk</p>
-                  <p className={`mt-1 text-xl font-semibold ${task.riskProbability > 0.7 ? "text-risk" : "text-ink"}`}>{formatPercent(task.riskProbability)}</p>
+          <article
+            key={task.id}
+            className="rounded-card border border-line bg-surface/95 px-5 py-5 shadow-soft transition hover:border-accent/20"
+          >
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`h-2.5 w-2.5 rounded-full ${
+                      task.riskProbability > 0.7 ? "bg-risk" : task.riskProbability > 0.45 ? "bg-accent" : "bg-safe"
+                    }`}
+                  />
+                  <h2 className="truncate text-2xl font-semibold tracking-[-0.04em]">{task.title}</h2>
                 </div>
-                <div className="rounded-3xl bg-canvas px-4 py-3">
-                  <p className="text-sm text-muted">Remaining</p>
-                  <p className="mt-1 text-xl font-semibold">{formatMinutes(task.progress.remainingMinutes)}</p>
+                <p className="mt-2 text-sm text-muted">
+                  {task.assignmentType.replaceAll("_", " ")} · {task.subject.toUpperCase()}
+                </p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-4 xl:min-w-[38rem] xl:grid-cols-4">
+                <div className="rounded-[1.6rem] bg-[linear-gradient(180deg,rgba(31,75,153,0.06),rgba(255,255,255,0.8))] px-4 py-3">
+                  <p className="text-xs uppercase tracking-[0.14em] text-muted">Risk</p>
+                  <p className={`mt-2 text-2xl font-semibold tracking-[-0.05em] ${task.riskProbability > 0.7 ? "text-risk" : "text-ink"}`}>
+                    {formatPercent(task.riskProbability)}
+                  </p>
                 </div>
-                <div className="rounded-3xl bg-canvas px-4 py-3">
-                  <p className="text-sm text-muted">Due</p>
-                  <p className="mt-1 text-base font-semibold">{formatShortDate(task.dueDate)}</p>
+                <div className="rounded-[1.6rem] bg-[linear-gradient(180deg,rgba(31,75,153,0.06),rgba(255,255,255,0.8))] px-4 py-3">
+                  <p className="text-xs uppercase tracking-[0.14em] text-muted">Remaining</p>
+                  <p className="mt-2 text-2xl font-semibold tracking-[-0.05em]">{formatMinutes(task.progress.remainingMinutes)}</p>
+                </div>
+                <div className="rounded-[1.6rem] bg-[linear-gradient(180deg,rgba(31,75,153,0.06),rgba(255,255,255,0.8))] px-4 py-3">
+                  <p className="text-xs uppercase tracking-[0.14em] text-muted">Due</p>
+                  <p className="mt-2 text-xl font-semibold tracking-[-0.04em]">{formatShortDate(task.dueDate)}</p>
+                </div>
+                <div className="rounded-[1.6rem] bg-[linear-gradient(180deg,rgba(44,122,75,0.07),rgba(255,255,255,0.8))] px-4 py-3">
+                  <p className="text-xs uppercase tracking-[0.14em] text-muted">Progress</p>
+                  <p className="mt-2 text-2xl font-semibold tracking-[-0.05em]">
+                    {task.progress.completedSubtasks}/{task.progress.totalSubtasks}
+                  </p>
                 </div>
               </div>
-              <p className="text-sm text-muted">
-                {task.progress.completedSubtasks}/{task.progress.totalSubtasks} steps complete.
-              </p>
-              <div className="space-y-2">
+            </div>
+
+            <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex min-w-0 flex-wrap gap-2">
                 {task.subtasks.slice(0, 3).map((subtask) => (
-                  <div key={subtask.id} className="rounded-3xl border border-line bg-white px-4 py-3 text-sm text-muted">
-                    <span className="font-semibold text-ink">{subtask.sequence + 1}. </span>
-                    {subtask.title}
-                  </div>
+                  <span key={subtask.id} className="rounded-full border border-line bg-white px-3 py-2 text-sm text-muted">
+                    {subtask.sequence + 1}. {subtask.title}
+                  </span>
                 ))}
               </div>
-              <Link className="inline-flex rounded-full border border-line px-4 py-2 text-sm text-muted transition hover:border-accent/35 hover:text-ink" href={`/tasks/${task.id}`}>
-                Open full breakdown
-              </Link>
+
+              <div className="flex shrink-0 flex-wrap gap-3">
+                <Link
+                  className="rounded-full bg-ink px-4 py-2 text-sm text-white transition hover:bg-black"
+                  href={`/focus?taskId=${task.id}`}
+                >
+                  Start focus session
+                </Link>
+                <Link
+                  className="rounded-full border border-line px-4 py-2 text-sm text-muted transition hover:border-accent/35 hover:text-ink"
+                  href={`/tasks/${task.id}`}
+                >
+                  View task
+                </Link>
+              </div>
             </div>
-          </SectionCard>
+          </article>
         ))}
       </div>
     </main>

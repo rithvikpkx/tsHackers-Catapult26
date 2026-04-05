@@ -1,164 +1,187 @@
 import Link from "next/link";
-import { VoiceCallActions } from "@/components/voice-call-actions";
 import { SectionCard } from "@/components/section-card";
+import { StatTile } from "@/components/stat-tile";
 import { loadScenario } from "@/app/lib/api";
 import { formatMinutes, formatPercent, formatShortDate } from "@/lib/grind/ui/format";
+
+function HealthGraphic({ value }: { value: number }) {
+  const size = 132;
+  const stroke = 10;
+  const radius = (size - stroke) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const progress = Math.round(value * 100);
+  const dashOffset = circumference * (1 - value);
+
+  return (
+    <div className="relative flex h-36 w-36 items-center justify-center">
+      <svg viewBox={`0 0 ${size} ${size}`} className="h-full w-full -rotate-90">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="rgba(23,23,23,0.08)"
+          strokeWidth={stroke}
+          fill="none"
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="url(#healthGradient)"
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={dashOffset}
+          fill="none"
+        />
+        <defs>
+          <linearGradient id="healthGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#1f4b99" />
+            <stop offset="100%" stopColor="#2c7a4b" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-[11px] uppercase tracking-[0.16em] text-muted">Health</span>
+        <span className="mt-1 text-3xl font-semibold tracking-[-0.05em]">{progress}%</span>
+      </div>
+    </div>
+  );
+}
 
 export default async function HomePage() {
   const snapshot = await loadScenario();
   const highestRiskTask = snapshot.highestRiskTask;
 
   return (
-    <main className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
-      <div className="space-y-5">
-        <section className="rounded-card border border-line bg-surface/95 p-6 shadow-soft">
-          <p className="text-xs uppercase tracking-[0.18em] text-muted">Pulse board</p>
-          <h1 className="mt-2 max-w-3xl text-4xl font-semibold tracking-[-0.06em] text-ink sm:text-5xl">
-            {snapshot.story.headline}
-          </h1>
-          <p className="mt-3 max-w-2xl text-base leading-7 text-muted">
-            Grind translated your calendar into concrete work, measured how you usually distort assignments, and prepared a cleaner recovery path.
-          </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link className="rounded-full bg-ink px-4 py-2 text-sm text-white transition hover:bg-black" href="/focus">
-              Start first step
-            </Link>
-            <Link className="rounded-full border border-line px-4 py-2 text-sm text-muted transition hover:border-accent/35 hover:text-ink" href="/tasks">
-              Open task breakdown
-            </Link>
+    <main>
+      <section className="relative overflow-hidden rounded-card border border-line bg-surface/95 p-7 shadow-soft">
+        <div className="absolute right-[-5rem] top-[-4rem] h-40 w-40 rounded-full bg-accent/10 blur-3xl" />
+        <div className="absolute left-8 top-8 h-20 w-20 rounded-full bg-risk/8 blur-2xl" />
+        <p className="text-xs uppercase tracking-[0.18em] text-muted">Highest risk</p>
+        {highestRiskTask ? (
+          <div className="mt-4 space-y-6">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+              <div className="max-w-3xl">
+                <h1 className="text-4xl font-semibold tracking-[-0.06em] sm:text-5xl">{highestRiskTask.title}</h1>
+                <p className="mt-3 text-sm text-muted">
+                  {highestRiskTask.subject.toUpperCase()} · due {formatShortDate(highestRiskTask.dueDate)}
+                </p>
+              </div>
+              <div className="flex h-24 w-24 items-center justify-center rounded-full border border-risk/20 bg-[radial-gradient(circle_at_30%_30%,rgba(185,65,46,0.24),rgba(255,255,255,0.94))]">
+                <span className="text-3xl font-semibold tracking-[-0.05em] text-risk">{formatPercent(highestRiskTask.riskProbability)}</span>
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-3">
+              <StatTile label="Corrected estimate" value={formatMinutes(highestRiskTask.estimatedEffortMinutesAdjusted)} />
+              <StatTile label="Recommended start" value={formatShortDate(highestRiskTask.recommendedStartTime)} />
+              <StatTile
+                label="Recovery"
+                value={
+                  snapshot.intervention
+                    ? `${formatPercent(snapshot.intervention.successProbabilityBefore)} -> ${formatPercent(snapshot.intervention.successProbabilityAfter)}`
+                    : snapshot.story.beforeToAfter
+                }
+                tone="safe"
+              />
+            </div>
+
+            <div className="rounded-[2rem] border border-line bg-[linear-gradient(135deg,rgba(185,65,46,0.04),rgba(255,255,255,0.95))] px-5 py-4">
+              <p className="text-sm leading-6 text-muted">{highestRiskTask.explanation}</p>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <Link
+                className="rounded-full bg-ink px-4 py-2 text-sm text-white transition hover:bg-black"
+                href={`/focus?taskId=${highestRiskTask.id}`}
+              >
+                Start focus session
+              </Link>
+              <Link className="rounded-full border border-line px-4 py-2 text-sm text-muted transition hover:border-accent/35 hover:text-ink" href="/tasks">
+                View all tasks
+              </Link>
+            </div>
           </div>
-        </section>
+        ) : (
+          <p className="mt-4 text-sm text-muted">No active risk detected.</p>
+        )}
+      </section>
 
-        <div className="grid gap-5 xl:grid-cols-2">
-          <SectionCard title="High-risk task" eyebrow="Detected risk" accent="risk">
-            {highestRiskTask ? (
-              <div className="space-y-3">
-                <div className="flex items-end justify-between gap-4">
-                  <div>
-                    <p className="text-lg font-semibold">{highestRiskTask.title}</p>
-                    <p className="text-sm text-muted">
-                      {highestRiskTask.subject.toUpperCase()} · due {formatShortDate(highestRiskTask.dueDate)}
-                    </p>
-                  </div>
-                  <p className="text-3xl font-semibold text-risk">{formatPercent(highestRiskTask.riskProbability)}</p>
+      {highestRiskTask ? (
+        <section className="mt-5 grid gap-5 xl:grid-cols-[1.05fr_0.95fr_0.9fr]">
+          <SectionCard title="Week health" eyebrow="Overview">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <HealthGraphic value={snapshot.intervention?.successProbabilityAfter ?? 0.44} />
+              <div className="grid flex-1 gap-3 sm:max-w-[18rem]">
+                <div className="rounded-[1.8rem] bg-[linear-gradient(145deg,rgba(31,75,153,0.08),rgba(255,255,255,0.82))] px-4 py-4">
+                  <p className="text-xs uppercase tracking-[0.14em] text-muted">Before</p>
+                  <p className="mt-2 text-2xl font-semibold tracking-[-0.05em]">
+                    {snapshot.intervention ? formatPercent(snapshot.intervention.successProbabilityBefore) : snapshot.story.beforeToAfter}
+                  </p>
                 </div>
-                <div className="grid grid-cols-2 gap-3 text-sm text-muted">
-                  <div className="rounded-3xl bg-canvas px-4 py-3">
-                    <p>Corrected estimate</p>
-                    <p className="mt-1 text-lg font-semibold text-ink">{formatMinutes(highestRiskTask.estimatedEffortMinutesAdjusted)}</p>
-                  </div>
-                  <div className="rounded-3xl bg-canvas px-4 py-3">
-                    <p>Recommended start</p>
-                    <p className="mt-1 text-lg font-semibold text-ink">{formatShortDate(highestRiskTask.recommendedStartTime)}</p>
-                  </div>
+                <div className="rounded-[1.8rem] bg-[linear-gradient(145deg,rgba(44,122,75,0.08),rgba(255,255,255,0.82))] px-4 py-4">
+                  <p className="text-xs uppercase tracking-[0.14em] text-muted">After</p>
+                  <p className="mt-2 text-2xl font-semibold tracking-[-0.05em] text-safe">
+                    {snapshot.intervention ? formatPercent(snapshot.intervention.successProbabilityAfter) : formatPercent(0.44)}
+                  </p>
                 </div>
-                <p className="text-sm leading-6 text-muted">{highestRiskTask.explanation}</p>
-              </div>
-            ) : (
-              <p className="text-sm text-muted">No active risk detected.</p>
-            )}
-          </SectionCard>
-
-          <SectionCard title="Distortion profile" eyebrow="Behavior model">
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-3xl bg-canvas px-4 py-3">
-                <p className="text-sm text-muted">Programming multiplier</p>
-                <p className="mt-1 text-xl font-semibold">{snapshot.profile.underestimationMultipliers.programming_assignment.toFixed(1)}x</p>
-              </div>
-              <div className="rounded-3xl bg-canvas px-4 py-3">
-                <p className="text-sm text-muted">Average start delay</p>
-                <p className="mt-1 text-xl font-semibold">{(snapshot.profile.meanStartDelayMinutes / 60 / 24).toFixed(1)}d</p>
-              </div>
-              <div className="rounded-3xl bg-canvas px-4 py-3">
-                <p className="text-sm text-muted">Best focus window</p>
-                <p className="mt-1 text-xl font-semibold">9 PM - 1 AM</p>
               </div>
             </div>
           </SectionCard>
 
-          <SectionCard title="What changed today" eyebrow="Intervention" accent="safe">
-            {snapshot.intervention ? (
-              <div className="space-y-3">
-                <p className="text-lg font-semibold">{snapshot.intervention.summaryText}</p>
-                <p className="text-sm leading-6 text-muted">{snapshot.intervention.rationaleText}</p>
-                <div className="rounded-3xl bg-canvas px-4 py-3">
-                  <p className="text-sm text-muted">Success probability</p>
-                  <p className="mt-1 text-xl font-semibold">
-                    {formatPercent(snapshot.intervention.successProbabilityBefore)} to{" "}
-                    {formatPercent(snapshot.intervention.successProbabilityAfter)}
-                  </p>
-                </div>
+          <SectionCard title="Profile" eyebrow="Signals">
+            <div className="grid gap-3">
+              <div className="flex items-center justify-between rounded-[1.6rem] bg-canvas px-4 py-3">
+                <span className="text-sm text-muted">Programming multiplier</span>
+                <span className="text-lg font-semibold tracking-[-0.04em]">
+                  {snapshot.profile.underestimationMultipliers.programming_assignment.toFixed(1)}x
+                </span>
               </div>
-            ) : (
-              <p className="text-sm text-muted">No intervention generated yet.</p>
-            )}
+              <div className="flex items-center justify-between rounded-[1.6rem] bg-canvas px-4 py-3">
+                <span className="text-sm text-muted">Start delay</span>
+                <span className="text-lg font-semibold tracking-[-0.04em]">
+                  {(snapshot.profile.meanStartDelayMinutes / 60 / 24).toFixed(1)}d
+                </span>
+              </div>
+              <div className="flex items-center justify-between rounded-[1.6rem] bg-canvas px-4 py-3">
+                <span className="text-sm text-muted">Focus window</span>
+                <span className="text-lg font-semibold tracking-[-0.04em]">9 PM - 1 AM</span>
+              </div>
+            </div>
           </SectionCard>
 
-          <SectionCard title="Upcoming focus block" eyebrow="Next action">
+          <SectionCard title="Today" eyebrow="Intervention">
             {snapshot.intervention ? (
               <div className="space-y-3">
+                <div className="rounded-[1.8rem] bg-[linear-gradient(145deg,rgba(44,122,75,0.08),rgba(255,255,255,0.82))] px-4 py-4">
+                  <p className="text-sm font-semibold tracking-[-0.03em]">{snapshot.intervention.summaryText}</p>
+                </div>
                 {snapshot.intervention.calendarChanges
                   .filter((change) => change.changeType === "focus_block")
+                  .slice(0, 1)
                   .map((change) => (
-                    <div key={change.id} className="rounded-3xl bg-canvas px-4 py-3">
-                      <p className="text-lg font-semibold">{change.title}</p>
+                    <div key={change.id} className="rounded-[1.8rem] bg-canvas px-4 py-4">
+                      <p className="text-xs uppercase tracking-[0.14em] text-muted">Focus block</p>
+                      <p className="mt-2 text-lg font-semibold tracking-[-0.04em]">{change.title}</p>
                       <p className="mt-1 text-sm text-muted">
                         {formatShortDate(change.startsAt)} to {formatShortDate(change.endsAt)}
                       </p>
                     </div>
                   ))}
-                <Link className="inline-flex rounded-full border border-line px-4 py-2 text-sm text-muted transition hover:border-accent/35 hover:text-ink" href="/focus">
-                  Enter focus mode
+                <Link
+                  className="inline-flex rounded-full border border-line px-4 py-2 text-sm text-muted transition hover:border-accent/35 hover:text-ink"
+                  href="/interventions"
+                >
+                  Open interventions
                 </Link>
               </div>
             ) : (
-              <p className="text-sm text-muted">No focus block reserved yet.</p>
+              <p className="text-sm text-muted">No intervention generated yet.</p>
             )}
           </SectionCard>
-        </div>
-      </div>
-
-      <div className="space-y-5">
-        <SectionCard title="Week health" eyebrow="Pulse signal">
-          <div className="rounded-3xl bg-canvas px-4 py-4">
-            <p className="text-sm text-muted">Current state</p>
-            <p className="mt-1 text-3xl font-semibold tracking-[-0.04em]">{snapshot.story.beforeToAfter}</p>
-            <p className="mt-2 text-sm leading-6 text-muted">
-              The week is recoverable because Grind found one clear bottleneck and one concrete change that materially improves the odds.
-            </p>
-          </div>
-        </SectionCard>
-
-        <SectionCard title="Voice reminder" eyebrow="Urgent outreach">
-          {snapshot.voiceCall ? (
-            <div className="space-y-4">
-              <p className="text-sm leading-6 text-muted">{snapshot.voiceCall.opening}</p>
-              <p className="rounded-3xl bg-canvas px-4 py-3 text-sm text-muted">{snapshot.voiceCall.riskLine}</p>
-              <p className="text-sm leading-6 text-muted">{snapshot.voiceCall.actionLine}</p>
-              <VoiceCallActions call={snapshot.voiceCall} />
-              {snapshot.voiceCall.userResponse ? (
-                <p className="text-sm text-safe">Latest response: {snapshot.voiceCall.userResponse.replaceAll("_", " ")}</p>
-              ) : null}
-            </div>
-          ) : (
-            <p className="text-sm text-muted">No call queued.</p>
-          )}
-        </SectionCard>
-
-        <SectionCard title="Notification outbox" eyebrow="Email + voice">
-          <div className="space-y-3">
-            {snapshot.notifications.map((notification) => (
-              <div key={notification.id} className="rounded-3xl border border-line bg-white px-4 py-3">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="font-semibold">{notification.subject}</p>
-                  <span className="text-xs uppercase tracking-[0.14em] text-muted">{notification.channel}</span>
-                </div>
-                <p className="mt-1 text-sm text-muted">{notification.preview}</p>
-              </div>
-            ))}
-          </div>
-        </SectionCard>
-      </div>
+        </section>
+      ) : null}
     </main>
   );
 }
