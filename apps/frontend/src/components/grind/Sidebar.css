@@ -36,6 +36,12 @@
   font-size: 11px; font-weight: 600; color: #E8580A;
   flex-shrink: 0;
 }
+.sidebar-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
 .sidebar-name { font-size: 13px; font-weight: 500; color: #e7e5e4; }
 .sidebar-grade { font-size: 11px; color: #78716c; margin-top: 1px; }
 
