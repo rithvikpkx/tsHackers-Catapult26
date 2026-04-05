@@ -17,13 +17,24 @@ Required for the current demo:
 
 Optional for live integrations:
 
-- `GOOGLE_CLIENT_ID`
-- `GOOGLE_CLIENT_SECRET`
+- `AUTH_GOOGLE_ID`
+- `AUTH_GOOGLE_SECRET`
 - `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
 - `RESEND_API_KEY`
-- `VOICE_PROVIDER`
-- `VOICE_WEBHOOK_SECRET`
+- `RESEND_FROM_EMAIL`
+- `RESEND_TO_EMAIL` (optional fallback recipient when no signed-in email is present)
+- `TWILIO_ACCOUNT_SID`
+- `TWILIO_AUTH_TOKEN`
+- `TWILIO_PHONE_NUMBER`
+- `TWILIO_WEBHOOK_SECRET`
+
+## On-demand email notifications
+
+- Open the notification center in the header.
+- Click `Send now` on any email notification.
+- The app posts to `POST /api/notifications/send`, sends through Resend, and updates notification status in Supabase.
 
 ## Implementation notes
 

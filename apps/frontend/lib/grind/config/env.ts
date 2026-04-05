@@ -23,6 +23,7 @@ export const env = {
   openaiApiKey: process.env.OPENAI_API_KEY,
   resendApiKey: process.env.RESEND_API_KEY,
   resendFromEmail: process.env.RESEND_FROM_EMAIL,
+  resendToEmail: process.env.RESEND_TO_EMAIL,
   twilioAccountSid: process.env.TWILIO_ACCOUNT_SID,
   twilioAuthToken: process.env.TWILIO_AUTH_TOKEN,
   twilioPhoneNumber: process.env.TWILIO_PHONE_NUMBER,
@@ -38,7 +39,7 @@ export function getIntegrationStatus(): IntegrationStatus {
       hasEnv("SUPABASE_SERVICE_ROLE_KEY")
         ? "ready"
         : "demo",
-    resend: hasEnv("RESEND_API_KEY") ? "ready" : "demo",
+    resend: hasEnv("RESEND_API_KEY") && hasEnv("RESEND_FROM_EMAIL") ? "ready" : "demo",
     voice: hasEnv("TWILIO_ACCOUNT_SID") && hasEnv("TWILIO_AUTH_TOKEN") && hasEnv("TWILIO_PHONE_NUMBER") ? "ready" : "demo",
   };
 }

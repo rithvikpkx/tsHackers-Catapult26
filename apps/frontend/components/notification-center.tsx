@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { VoiceCallActions } from "@/components/voice-call-actions";
 import type { NotificationPayload, VoiceCallScript } from "@/lib/grind/contracts";
 
@@ -74,8 +75,18 @@ function MailIcon() {
 }
 
 export function NotificationCenter({ notifications, voiceCall }: NotificationCenterProps) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [deliveryById, setDeliveryById] = useState<Record<string, NotificationPayload["deliveryStatus"]>>({});
+  const [sendingIds, setSendingIds] = useState<Record<string, boolean>>({});
+  const [errorById, setErrorById] = useState<Record<string, string | undefined>>({});
   const count = notifications.length + (voiceCall ? 1 : 0);
+
+  useEffect(() => {
+    setDeliveryById({});
+    setSendingIds({});
+    setErrorById({});
+  }, [notifications]);
 
   const grouped = useMemo(
     () => ({
@@ -84,6 +95,58 @@ export function NotificationCenter({ notifications, voiceCall }: NotificationCen
     }),
     [notifications, voiceCall],
   );
+
+  async function sendEmailNotification(notification: NotificationPayload) {
+    if (notification.channel !== "email") {
+      return;
+    }
+
+    setSendingIds((current) => ({ ...current, [notification.id]: true }));
+    setErrorById((current) => ({ ...current, [notification.id]: undefined }));
+
+    try {
+      const response = await fetch("/api/notifications/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          notificationId: notification.id,
+          notification,
+        }),
+      });
+
+      const payload = (await response.json().catch(() => ({}))) as {
+        deliveryStatus?: NotificationPayload["deliveryStatus"];
+        error?: string;
+      };
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? "Unable to send email notification.");
+      }
+
+      setDeliveryById((current) => ({
+        ...current,
+        [notification.id]: payload.deliveryStatus ?? "sent",
+      }));
+      router.refresh();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to send email notification.";
+      setErrorById((current) => ({ ...current, [notification.id]: message }));
+    } finally {
+      setSendingIds((current) => ({ ...current, [notification.id]: false }));
+    }
+  }
+
+  function statusLabel(status: NotificationPayload["deliveryStatus"]): string {
+    if (status === "sent") {
+      return "sent";
+    }
+    if (status === "simulated") {
+      return "simulated";
+    }
+    return "queued";
+  }
 
   return (
     <div className="relative z-[140]">
@@ -149,6 +212,24 @@ export function NotificationCenter({ notifications, voiceCall }: NotificationCen
                           <p className="text-sm font-semibold text-ink">{notification.subject}</p>
                           <span className="text-[11px] uppercase tracking-[0.16em] text-muted">{notification.channel}</span>
                         </div>
+                        <div className="mt-2 flex items-center justify-between gap-3">
+                          <span className="text-[11px] uppercase tracking-[0.14em] text-muted">
+                            {statusLabel(deliveryById[notification.id] ?? notification.deliveryStatus)}
+                          </span>
+                          {notification.channel === "email" ? (
+                            <button
+                              type="button"
+                              onClick={() => sendEmailNotification(notification)}
+                              disabled={Boolean(sendingIds[notification.id])}
+                              className="rounded-full border border-line bg-white px-3 py-1.5 text-xs uppercase tracking-[0.14em] text-ink transition hover:border-accent/35 disabled:cursor-not-allowed disabled:opacity-55"
+                            >
+                              {sendingIds[notification.id] ? "Sending..." : "Send now"}
+                            </button>
+                          ) : null}
+                        </div>
+                        {errorById[notification.id] ? (
+                          <p className="mt-2 text-xs text-risk">{errorById[notification.id]}</p>
+                        ) : null}
                       </div>
                     ))}
                   </div>
