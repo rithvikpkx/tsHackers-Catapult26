@@ -1,30 +1,5 @@
-# ML Service (Builder C)
+# ML Service Placeholder
 
-FastAPI service for the OULAD bootstrap risk prior and the final Grind task-risk combiner.
+The v1 Grind build keeps normalization, decomposition, profile updates, risk scoring, and intervention logic inside the Next.js application for faster iteration.
 
-## Endpoints
-
-- `GET /health`
-- `POST /predict/corrected-effort`
-- `POST /predict/risk-prior`
-- `POST /predict/failure-risk`
-- `POST /predict/task-score`
-
-## Run
-
-```bash
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8001
-```
-
-## Train The OULAD Prior
-
-Set `OULAD_DATA_DIR` if the dataset is not already available at the local default path, then run:
-
-```bash
-python -m builder_c.starter.train_models
-python -m builder_c.starter.run_demo
-python -m unittest builder_c.tests.test_pipeline
-```
+This directory remains as a future experimentation surface if a separate Python model service becomes necessary later.
