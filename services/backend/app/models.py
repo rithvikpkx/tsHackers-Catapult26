@@ -16,6 +16,7 @@ class Task(BaseModel):
     id: str
     title: str
     course: str
+    task_type: str = Field(default="unknown")
     due_date: datetime
     estimated_effort_hours: float = Field(ge=0)
     corrected_effort_hours: Optional[float] = Field(default=None, ge=0)
@@ -23,6 +24,13 @@ class Task(BaseModel):
     failure_risk: Optional[float] = Field(default=None, ge=0, le=1)
     risk_explanation: Optional[str] = None
     status: TaskStatus = TaskStatus.TODO
+    start_timestamp: Optional[datetime] = None
+    end_timestamp: Optional[datetime] = None
+    actual_duration_hours: Optional[float] = Field(default=None, ge=0)
+    predicted_start_delay_hours: Optional[float] = Field(default=None, ge=0)
+    predicted_completion_hours: Optional[float] = Field(default=None, ge=0)
+    best_work_window: Optional[str] = None
+    preferred_work_times: Optional[dict[str, float]] = None
 
 
 class IngestRequest(BaseModel):
@@ -55,6 +63,20 @@ class CalendarFocusBlockRequest(BaseModel):
     title: str
     start: datetime
     end: datetime
+
+
+class CalendarBlock(BaseModel):
+    task_id: Optional[str] = None
+    source: str = Field(default="google_calendar")
+    block_type: str
+    start: datetime
+    end: datetime
+    description: Optional[str] = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class CalendarBlocksRequest(BaseModel):
+    blocks: list[CalendarBlock]
 
 
 class TaskEventType(str, Enum):

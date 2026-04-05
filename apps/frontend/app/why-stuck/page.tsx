@@ -1,4 +1,5 @@
-import { loadDemoTasks, toPercent } from "../lib/demo-data";
+import { loadDemoTasks } from "../lib/demo-data";
+import { toPercent } from "../lib/task-format";
 
 export default async function WhyStuckPage() {
   const tasks = await loadDemoTasks();
@@ -28,4 +29,3 @@ export default async function WhyStuckPage() {
     </main>
   );
 }
-

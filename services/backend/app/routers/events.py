@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from app.models import PersonalizationSignals, TaskEvent
-from app.store import TASK_EVENTS, derive_personalization_signals
+from app.store import TASK_EVENTS, derive_personalization_signals, record_event
 
 router = APIRouter(prefix="/api/events", tags=["events"])
 
@@ -13,7 +13,7 @@ def list_events() -> list[TaskEvent]:
 
 @router.post("", response_model=PersonalizationSignals)
 def log_event(payload: TaskEvent) -> PersonalizationSignals:
-    TASK_EVENTS.append(payload)
+    record_event(payload)
     return derive_personalization_signals()
 
 

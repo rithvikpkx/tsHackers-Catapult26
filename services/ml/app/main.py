@@ -155,3 +155,23 @@ def failure_risk(payload: TaskScoreInput) -> dict[str, float | str]:
 @app.post("/predict/task-score")
 def task_score(payload: TaskScoreInput) -> dict[str, float | str]:
     return failure_risk(payload)
+
+
+@app.post("/predict/task-predictions")
+def task_predictions(payload: TaskScoreInput) -> dict[str, float | str]:
+    estimated = payload.corrected_effort_hours
+    start_delay = max(payload.start_delay_hours, 0.0)
+    predicted_completion_hours = round(estimated * (1 + start_delay / max(estimated, 1.0) * 0.1), 2)
+    predicted_start_delay_hours = round(start_delay * 0.8, 2)
+    preferred_work_times = {
+        "morning": 0.35,
+        "afternoon": 0.45,
+        "evening": 0.20,
+    }
+    best_work_window = "Wednesday 6pm-8pm" if payload.task_type in {"problem_set", "project"} else "Thursday 10am-12pm"
+    return {
+        "predicted_start_delay_hours": predicted_start_delay_hours,
+        "predicted_completion_hours": predicted_completion_hours,
+        "best_work_window": best_work_window,
+        "preferred_work_times": preferred_work_times,
+    }

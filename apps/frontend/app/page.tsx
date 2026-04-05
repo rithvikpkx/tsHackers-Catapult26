@@ -1,4 +1,6 @@
-import { loadDemoTasks, toPercent } from "./lib/demo-data";
+import { loadTasks } from "./lib/api";
+import { loadDemoTasks } from "./lib/demo-data";
+import { toPercent } from "./lib/task-format";
 
 const routes = [
   { href: "/tasks", label: "Tasks" },
@@ -9,7 +11,8 @@ const routes = [
 ];
 
 export default async function HomePage() {
-  const tasks = await loadDemoTasks();
+  const backendTasks = await loadTasks();
+  const tasks = backendTasks.length ? backendTasks : await loadDemoTasks();
   const highestRisk = [...tasks].sort((left, right) => (right.failure_risk ?? 0) - (left.failure_risk ?? 0))[0];
   const averagePrior =
     tasks.reduce((total, task) => total + (task.course_risk_prior ?? 0), 0) / Math.max(tasks.length, 1);
@@ -48,4 +51,3 @@ export default async function HomePage() {
     </main>
   );
 }
-
