@@ -300,12 +300,19 @@ export async function getLiveScenarioSnapshot(): Promise<ScenarioSnapshot> {
     throw new LiveStoreError("Supabase schema is not ready or user row is missing.", "schema_missing");
   }
 
+  await getSupabaseAdminClient()
+    .from("tasks")
+    .delete()
+    .eq("user_id", user.id)
+    .like("source_event_id", "starter-%");
+
   const [{ data: taskRows, error: tasksError }, { data: rawEventRows }, { data: scheduleEventRows }, { data: profileRow }, { data: riskRows }, { data: interventionRows }, { data: notificationRows }] =
     await Promise.all([
       supabase
         .from("tasks")
         .select("*")
         .eq("user_id", user.id)
+        .neq("task_status", "dismissed")
         .gte("due_date", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
         .order("due_date", { ascending: true }),
       supabase.from("raw_calendar_events").select("*").eq("user_id", user.id).order("starts_at", { ascending: true }).limit(30),
@@ -552,5 +559,28 @@ export async function updateLiveSubtask(taskId: string, subtaskId: string, patch
         derived_submission_offset_minutes: derivedSubmissionOffsetMinutes,
       });
     }
+  }
+}
+
+export async function dismissLiveTask(taskId: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new LiveStoreError("You must sign in to modify a task.", "unauthenticated");
+  }
+
+  const supabase = getSupabaseAdminClient();
+
+  await supabase.from("notifications").delete().eq("user_id", session.user.id).eq("task_id", taskId);
+
+  const { error } = await supabase
+    .from("tasks")
+    .update({
+      task_status: "dismissed",
+    })
+    .eq("id", taskId)
+    .eq("user_id", session.user.id);
+
+  if (error) {
+    throw new LiveStoreError(`Unable to dismiss task: ${error.message}`, "schema_missing");
   }
 }

@@ -12,11 +12,15 @@ dist/
 # Env
 .env
 .env.local
+.env.*
 
 # OS/IDE
 .DS_Store
 .idea/
 .vscode/
+
+# Local provider CLI state
+.local/
 
 # Local ML cache
 builder_c/artifacts/oulad_feature_cache.csv

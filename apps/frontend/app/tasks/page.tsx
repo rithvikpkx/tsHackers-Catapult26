@@ -1,6 +1,31 @@
 import Link from "next/link";
 import { loadScenario } from "@/app/lib/api";
+import { DeleteTaskButton } from "@/components/delete-task-button";
 import { formatMinutes, formatPercent, formatShortDate } from "@/lib/grind/ui/format";
+
+function PlayIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4">
+      <path d="m9 7 8 5-8 5V7Z" fill="currentColor" />
+    </svg>
+  );
+}
+
+function EyeIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4">
+      <path
+        d="M2.75 12s3.4-5.75 9.25-5.75S21.25 12 21.25 12 17.85 17.75 12 17.75 2.75 12 2.75 12Z"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.7"
+      />
+      <circle cx="12" cy="12" r="2.5" fill="none" stroke="currentColor" strokeWidth="1.7" />
+    </svg>
+  );
+}
 
 export default async function TasksPage() {
   const snapshot = await loadScenario();
@@ -74,17 +99,20 @@ export default async function TasksPage() {
 
               <div className="flex shrink-0 flex-wrap gap-3">
                 <Link
-                  className="rounded-full bg-ink px-4 py-2 text-sm text-white transition hover:bg-black"
+                  className="inline-flex items-center gap-2 rounded-full bg-[linear-gradient(135deg,#171717,#1f4b99)] px-4 py-2 text-sm text-white shadow-[0_10px_24px_rgba(23,23,23,0.14)] transition hover:brightness-[1.04]"
                   href={`/focus?taskId=${task.id}`}
                 >
+                  <PlayIcon />
                   Start focus session
                 </Link>
                 <Link
-                  className="rounded-full border border-line px-4 py-2 text-sm text-muted transition hover:border-accent/35 hover:text-ink"
+                  className="inline-flex items-center gap-2 rounded-full border border-accent/18 bg-[linear-gradient(180deg,rgba(31,75,153,0.07),rgba(255,255,255,0.94))] px-4 py-2 text-sm text-accent transition hover:border-accent/30 hover:bg-[linear-gradient(180deg,rgba(31,75,153,0.1),rgba(255,255,255,0.98))]"
                   href={`/tasks/${task.id}`}
                 >
+                  <EyeIcon />
                   View task
                 </Link>
+                <DeleteTaskButton taskId={task.id} />
               </div>
             </div>
           </article>

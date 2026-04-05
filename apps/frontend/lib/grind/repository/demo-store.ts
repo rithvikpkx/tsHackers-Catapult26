@@ -59,6 +59,24 @@ export function renameSubtask(taskId: string, subtaskId: string, title: string) 
   return runPipeline(getState());
 }
 
+export function deleteTask(taskId: string) {
+  const state = getState();
+  const snapshot = runPipeline(state);
+  const task = snapshot.tasks.find((entry) => entry.id === taskId);
+  if (!task) {
+    return snapshot;
+  }
+
+  state.rawEvents = state.rawEvents.filter((event) => event.id !== task.sourceEventId);
+  Object.keys(state.subtaskEdits).forEach((key) => {
+    if (key.startsWith(`${taskId}:`)) {
+      delete state.subtaskEdits[key];
+    }
+  });
+
+  return runPipeline(state);
+}
+
 export function recordVoiceIntent(callId: string, intent: VoiceIntent) {
   const state = getState();
   state.callResponses[callId] = intent;

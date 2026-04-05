@@ -6,9 +6,9 @@ import { buildNotifications } from "@/lib/grind/notifications/build";
 import { buildDistortionProfile } from "@/lib/grind/profile/model";
 import { assessRisk } from "@/lib/grind/risk/score";
 import { getSupabaseAdminClient } from "@/lib/grind/supabase/admin";
-import { buildStarterTasks } from "@/lib/grind/tasks/bootstrap";
 import { generateSubtasks } from "@/lib/grind/tasks/decompose";
 import { normalizeEvents } from "@/lib/grind/tasks/normalize";
+import { generateRefinedSubtasks } from "@/lib/grind/tasks/purdue-genai";
 import { buildProgress, deriveTaskStatus } from "@/lib/grind/tasks/progress";
 import { generateIntervention } from "@/lib/grind/interventions/generate";
 import { env } from "@/lib/grind/config/env";
@@ -59,6 +59,7 @@ type ExistingTaskRow = {
   source_event_id: string | null;
   actual_start_time: string | null;
   submission_time: string | null;
+  task_status: string;
 };
 
 type ExistingSubtaskRow = {
@@ -308,6 +309,20 @@ function notificationPayload(userId: string, notification: NotificationPayload) 
   };
 }
 
+function canReplaceExistingSubtasks(subtasks: Subtask[]): boolean {
+  if (subtasks.length === 0) {
+    return true;
+  }
+
+  return subtasks.every(
+    (subtask) =>
+      subtask.status === "pending" &&
+      subtask.sourceMode !== "user_edited" &&
+      !subtask.startedAt &&
+      !subtask.completedAt,
+  );
+}
+
 export async function syncGoogleCalendarForCurrentUser(): Promise<{ importedEvents: number; tasks: number }> {
   const session = await auth();
   if (!session?.user?.email || !session.user.id) {
@@ -339,10 +354,9 @@ export async function syncGoogleCalendarForCurrentUser(): Promise<{ importedEven
   const rawEvents = await fetchUpcomingGoogleEvents(connection.encrypted_refresh_token);
   const nowIso = new Date().toISOString();
   const { tasks: detectedTasks, scheduleEvents } = normalizeEvents(rawEvents, user.id, nowIso);
-  const normalizedTasks = detectedTasks.length > 0 ? detectedTasks : rawEvents.length === 0 ? buildStarterTasks(user.id, nowIso, scheduleEvents) : [];
 
   const [{ data: existingTaskRows }, { data: observationRows }] = await Promise.all([
-    supabase.from("tasks").select("id,source_event_id,actual_start_time,submission_time").eq("user_id", user.id),
+    supabase.from("tasks").select("id,source_event_id,actual_start_time,submission_time,task_status").eq("user_id", user.id),
     supabase.from("task_observations").select("*").eq("user_id", user.id),
   ]);
 
@@ -357,6 +371,12 @@ export async function syncGoogleCalendarForCurrentUser(): Promise<{ importedEven
       .filter((row) => row.source_event_id)
       .map((row) => [row.source_event_id as string, row]),
   );
+  const dismissedSourceEventIds = new Set(
+    ((existingTaskRows ?? []) as ExistingTaskRow[])
+      .filter((row) => row.task_status === "dismissed" && row.source_event_id)
+      .map((row) => row.source_event_id as string),
+  );
+  const normalizedTasks = detectedTasks.filter((task) => !dismissedSourceEventIds.has(task.sourceEventId));
   const existingSubtasksByTaskId = new Map<string, Subtask[]>();
   for (const row of (existingSubtaskRows ?? []) as ExistingSubtaskRow[]) {
     const list = existingSubtasksByTaskId.get(row.task_id) ?? [];
@@ -420,9 +440,17 @@ export async function syncGoogleCalendarForCurrentUser(): Promise<{ importedEven
 
     const taskId = persistedTask.id;
     let subtasks = existingSubtasksByTaskId.get(taskId) ?? [];
+    const shouldGenerateRefinedSubtasks = canReplaceExistingSubtasks(subtasks);
 
-    if (subtasks.length === 0) {
-      const generatedSubtasks = generateSubtasks({ ...task, id: taskId });
+    if (shouldGenerateRefinedSubtasks) {
+      const refinedTask = { ...task, id: taskId };
+      const generatedSubtasks = await generateRefinedSubtasks(refinedTask);
+
+      if (subtasks.length > 0) {
+        const existingIds = subtasks.map((subtask) => subtask.id);
+        await supabase.from("subtasks").delete().in("id", existingIds);
+      }
+
       const { data: insertedSubtasks, error: subtaskError } = await supabase
         .from("subtasks")
         .insert(

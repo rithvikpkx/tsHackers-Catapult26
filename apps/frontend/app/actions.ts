@@ -2,9 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { env } from "@/lib/grind/config/env";
-import { completeSubtask, recordVoiceIntent, renameSubtask, rerunScenario, startSubtask } from "@/lib/grind/repository/demo-store";
+import { completeSubtask, deleteTask, recordVoiceIntent, renameSubtask, rerunScenario, startSubtask } from "@/lib/grind/repository/demo-store";
 import { syncGoogleCalendarForCurrentUser } from "@/lib/grind/repository/live-sync";
-import { updateLiveSubtask } from "@/lib/grind/repository/live-store";
+import { dismissLiveTask, updateLiveSubtask } from "@/lib/grind/repository/live-store";
 import type { VoiceIntent } from "@/lib/grind/contracts";
 
 function refreshAll() {
@@ -73,6 +73,15 @@ export async function renameSubtaskAction(taskId: string, subtaskId: string, tit
 export async function respondToVoiceCallAction(callId: string, intent: VoiceIntent) {
   if (env.demoMode) {
     recordVoiceIntent(callId, intent);
+  }
+  refreshAll();
+}
+
+export async function deleteTaskAction(taskId: string) {
+  if (env.demoMode) {
+    deleteTask(taskId);
+  } else {
+    await dismissLiveTask(taskId);
   }
   refreshAll();
 }

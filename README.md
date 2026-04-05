@@ -18,3 +18,13 @@ Fresh MVP scaffold for a modular academic execution app.
 ## Next step
 
 Set environment variables in [apps/frontend/.env.example](/Users/rithvikpraveenkumar/Repos/tsHackers-Catapult26/apps/frontend/.env.example), then run the frontend from `apps/frontend`.
+
+## Purdue GenAI Studio
+
+The live subtask breakdown pipeline can use Purdue GenAI Studio's OpenAI-compatible chat endpoint for higher-quality task decomposition.
+
+Set these values in `apps/frontend/.env.local`:
+
+- `PURDUE_GENAI_API_KEY`
+- `PURDUE_GENAI_MODEL` (default: `llama3.1:latest`)
+- `PURDUE_GENAI_BASE_URL` (default: `https://genai.rcac.purdue.edu/api`)
