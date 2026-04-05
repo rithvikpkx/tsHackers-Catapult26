@@ -1,0 +1,298 @@
+{
+  "weights": [
+    0.1293762279622233,
+    0.10632240248615049,
+    -0.022223050006425216,
+    -0.036834020536002834,
+    0.9967604556658654,
+    -0.6758387484400389,
+    0.3236312901061082,
+    -0.016741153841713423,
+    -0.46119128207769305,
+    -0.21632476880089263,
+    0.35213451402696566,
+    0.17515908381530806,
+    0.03498122635294228,
+    -0.0016106528617519033,
+    -0.4693910839643986,
+    -0.3812453147403542,
+    -0.11222747000615582,
+    0.08771697121626679,
+    -0.03478003487565761,
+    0.028503048348607642,
+    -0.1296791018207081,
+    0.25687275189948255,
+    -0.03548603659872297,
+    0.0383959404003591,
+    -0.08446860293499509,
+    -0.12816331350112403,
+    -0.4172301719429658,
+    0.3757690384527374,
+    0.5100144294405178,
+    -0.15883430183222194,
+    0.9012828141007568,
+    -0.8824914625298353,
+    0.061260563910242705,
+    0.0892508573034205,
+    0.1132158405000775,
+    -0.06338022952587503,
+    0.064912982978412,
+    0.13543404920945398,
+    -0.15655644697029136,
+    -0.16712069411856492,
+    0.42372136248216014,
+    0.19139510123108375,
+    -0.09109229043652331,
+    0.37924508302104487,
+    0.3070755026105855,
+    0.2653806473053643,
+    0.05239505416021943,
+    0.04612405666354737,
+    0.006480008955158691,
+    -0.07088588947666619,
+    -0.023829726773914248,
+    -0.16482968538858306,
+    -0.22867307735747555,
+    -0.368134941531413,
+    0.10273386641182539,
+    0.06911807012258682,
+    0.028495095653453466,
+    -0.02531571547563414,
+    0.22566274766349917
+  ],
+  "bias": 0.2461213871521361,
+  "numeric_features": [
+    "studied_credits",
+    "num_of_prev_attempts",
+    "days_registered_before_start",
+    "module_presentation_length",
+    "unregistered_by_day_30",
+    "day_of_unregistration_capped",
+    "assessments_due_30d",
+    "assessments_submitted_30d",
+    "assessment_mean_score_30d",
+    "weighted_score_pct_30d",
+    "missing_submissions_30d",
+    "late_submissions_30d",
+    "banked_count_30d",
+    "total_clicks_30d",
+    "active_days_30d",
+    "unique_sites_30d",
+    "unique_activity_types_30d",
+    "pre_start_clicks",
+    "post_start_clicks",
+    "clicks_resource",
+    "clicks_oucontent",
+    "clicks_subpage",
+    "clicks_url",
+    "clicks_forumng",
+    "clicks_quiz"
+  ],
+  "categorical_features": [
+    "code_module",
+    "code_presentation",
+    "gender",
+    "highest_education",
+    "imd_band",
+    "age_band",
+    "disability"
+  ],
+  "numeric_stats": {
+    "studied_credits": {
+      "median": 60.0,
+      "mean": 79.71043951829408,
+      "std": 40.99721729537437
+    },
+    "num_of_prev_attempts": {
+      "median": 0.0,
+      "mean": 0.1634578507325305,
+      "std": 0.4782438341369785
+    },
+    "days_registered_before_start": {
+      "median": 57.0,
+      "mean": 69.55649305821892,
+      "std": 49.40384494277777
+    },
+    "module_presentation_length": {
+      "median": 262.0,
+      "mean": 256.0344787911329,
+      "std": 13.155201767621827
+    },
+    "unregistered_by_day_30": {
+      "median": 0.0,
+      "mean": 0.15785840300682671,
+      "std": 0.3646151756779631
+    },
+    "day_of_unregistration_capped": {
+      "median": 31.0,
+      "mean": 26.97909795198282,
+      "std": 9.858628691361654
+    },
+    "assessments_due_30d": {
+      "median": 1.0,
+      "mean": 0.872133159469203,
+      "std": 0.43728765649390516
+    },
+    "assessments_submitted_30d": {
+      "median": 1.0,
+      "mean": 0.6612334125949222,
+      "std": 0.5294486129487397
+    },
+    "assessment_mean_score_30d": {
+      "median": 60.0,
+      "mean": 45.758092352535094,
+      "std": 38.99534263855023
+    },
+    "weighted_score_pct_30d": {
+      "median": 56.00000000000001,
+      "mean": 42.39339652729277,
+      "std": 38.57802420268421
+    },
+    "missing_submissions_30d": {
+      "median": 0.0,
+      "mean": 0.2108997468742809,
+      "std": 0.427062793077249
+    },
+    "late_submissions_30d": {
+      "median": 0.0,
+      "mean": 0.16882718416813683,
+      "std": 0.37756386412778514
+    },
+    "banked_count_30d": {
+      "median": 0.0,
+      "mean": 0.01576282887167293,
+      "std": 0.1282008174570701
+    },
+    "total_clicks_30d": {
+      "median": 186.0,
+      "mean": 323.74530183324384,
+      "std": 434.91739914395816
+    },
+    "active_days_30d": {
+      "median": 11.0,
+      "mean": 13.438406075017259,
+      "std": 11.125914317467446
+    },
+    "unique_sites_30d": {
+      "median": 21.0,
+      "mean": 26.25987573828335,
+      "std": 22.82364496930792
+    },
+    "unique_activity_types_30d": {
+      "median": 7.0,
+      "mean": 6.2566157858403,
+      "std": 3.13236044562224
+    },
+    "pre_start_clicks": {
+      "median": 19.0,
+      "mean": 65.74553194753395,
+      "std": 129.40113228205908
+    },
+    "post_start_clicks": {
+      "median": 148.0,
+      "mean": 257.9997698857099,
+      "std": 346.4969598903183
+    },
+    "clicks_resource": {
+      "median": 7.0,
+      "mean": 12.268620081307049,
+      "std": 24.839160119922393
+    },
+    "clicks_oucontent": {
+      "median": 21.0,
+      "mean": 68.4647925136151,
+      "std": 118.73033069577771
+    },
+    "clicks_subpage": {
+      "median": 16.0,
+      "mean": 34.54836235330214,
+      "std": 49.93531562300125
+    },
+    "clicks_url": {
+      "median": 3.0,
+      "mean": 6.632852650149574,
+      "std": 12.621190671735532
+    },
+    "clicks_forumng": {
+      "median": 25.0,
+      "mean": 84.16292091738897,
+      "std": 179.49790961332494
+    },
+    "clicks_quiz": {
+      "median": 0.0,
+      "mean": 43.70553041343867,
+      "std": 102.5538000427805
+    }
+  },
+  "categorical_levels": {
+    "code_module": [
+      "AAA",
+      "BBB",
+      "CCC",
+      "DDD",
+      "EEE",
+      "FFF",
+      "GGG"
+    ],
+    "code_presentation": [
+      "2013B",
+      "2013J",
+      "2014B",
+      "2014J"
+    ],
+    "gender": [
+      "F",
+      "M"
+    ],
+    "highest_education": [
+      "A Level or Equivalent",
+      "HE Qualification",
+      "Lower Than A Level",
+      "No Formal quals",
+      "Post Graduate Qualification"
+    ],
+    "imd_band": [
+      "0-10%",
+      "10-20",
+      "20-30%",
+      "30-40%",
+      "40-50%",
+      "50-60%",
+      "60-70%",
+      "70-80%",
+      "80-90%",
+      "90-100%",
+      "missing"
+    ],
+    "age_band": [
+      "0-35",
+      "35-55",
+      "55<="
+    ],
+    "disability": [
+      "N",
+      "Y"
+    ]
+  },
+  "thresholds": {
+    "weighted_score_pct_30d_low": 0.0,
+    "total_clicks_30d_low": 50.0,
+    "active_days_30d_low": 4.0,
+    "recent_score_good": 68.0
+  },
+  "metrics": {
+    "train_rows": 26074,
+    "validation_rows": 6519,
+    "model": {
+      "auroc": 0.84,
+      "pr_auc": 0.8787,
+      "brier_score": 0.1608,
+      "train_brier_score": 0.1592
+    },
+    "dummy": {
+      "auroc": 0.4735,
+      "pr_auc": 0.5312,
+      "brier_score": 0.2492
+    }
+  }
+}

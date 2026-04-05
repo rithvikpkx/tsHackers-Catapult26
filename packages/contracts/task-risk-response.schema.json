@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TaskRiskResponse",
+  "type": "object",
+  "required": [
+    "course_risk_prior",
+    "failure_risk",
+    "risk_bucket",
+    "risk_explanation"
+  ],
+  "properties": {
+    "course_risk_prior": { "type": "number", "minimum": 0, "maximum": 1 },
+    "failure_risk": { "type": "number", "minimum": 0, "maximum": 1 },
+    "risk_bucket": { "type": "string", "enum": ["low", "medium", "high"] },
+    "risk_explanation": { "type": "string" }
+  },
+  "additionalProperties": false
+}

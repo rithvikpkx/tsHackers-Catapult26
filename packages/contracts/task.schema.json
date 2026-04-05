@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Task",
+  "type": "object",
+  "required": [
+    "id",
+    "title",
+    "course",
+    "due_date",
+    "estimated_effort_hours",
+    "status"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "title": { "type": "string" },
+    "course": { "type": "string" },
+    "due_date": { "type": "string", "format": "date-time" },
+    "estimated_effort_hours": { "type": "number", "minimum": 0 },
+    "task_type": { "type": "string" },
+    "corrected_effort_hours": { "type": "number", "minimum": 0 },
+    "course_risk_prior": { "type": "number", "minimum": 0, "maximum": 1 },
+    "failure_risk": { "type": "number", "minimum": 0, "maximum": 1 },
+    "risk_explanation": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["todo", "in_progress", "blocked", "done"]
+    },
+    "start_timestamp": { "type": "string", "format": "date-time" },
+    "end_timestamp": { "type": "string", "format": "date-time" },
+    "actual_duration_hours": { "type": "number", "minimum": 0 },
+    "predicted_start_delay_hours": { "type": "number", "minimum": 0 },
+    "predicted_completion_hours": { "type": "number", "minimum": 0 },
+    "best_work_window": { "type": "string" },
+    "preferred_work_times": {
+      "type": "object",
+      "additionalProperties": { "type": "number" }
+    }
+  },
+  "additionalProperties": false
+}
+

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "InterventionResponse",
+  "type": "object",
+  "required": [
+    "task_id",
+    "risk_before",
+    "risk_after",
+    "before",
+    "after",
+    "smallest_next_step"
+  ],
+  "properties": {
+    "task_id": { "type": "string" },
+    "risk_before": { "type": "number", "minimum": 0, "maximum": 1 },
+    "risk_after": { "type": "number", "minimum": 0, "maximum": 1 },
+    "before": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/scheduleBlock" }
+    },
+    "after": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/scheduleBlock" }
+    },
+    "smallest_next_step": { "type": "string" }
+  },
+  "$defs": {
+    "scheduleBlock": {
+      "type": "object",
+      "required": ["start", "end", "label"],
+      "properties": {
+        "start": { "type": "string", "format": "date-time" },
+        "end": { "type": "string", "format": "date-time" },
+        "label": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
+
