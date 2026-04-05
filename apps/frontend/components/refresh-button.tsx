@@ -1,9 +1,9 @@
 "use client";
 
 import { startTransition, useState } from "react";
-import { rerunDemoPipelineAction } from "@/app/actions";
+import { rerunDemoPipelineAction, syncGoogleCalendarAction } from "@/app/actions";
 
-export function RefreshButton() {
+export function RefreshButton({ mode }: { mode: "demo" | "live" }) {
   const [pending, setPending] = useState(false);
 
   return (
@@ -13,12 +13,16 @@ export function RefreshButton() {
       onClick={() => {
         setPending(true);
         startTransition(async () => {
-          await rerunDemoPipelineAction();
+          if (mode === "demo") {
+            await rerunDemoPipelineAction();
+          } else {
+            await syncGoogleCalendarAction();
+          }
           setPending(false);
         });
       }}
     >
-      {pending ? "Refreshing..." : "Re-run demo pipeline"}
+      {pending ? (mode === "demo" ? "Refreshing..." : "Syncing...") : mode === "demo" ? "Re-run demo pipeline" : "Sync Google Calendar"}
     </button>
   );
 }

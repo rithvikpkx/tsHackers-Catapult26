@@ -7,21 +7,35 @@ function hasEnv(key: string): boolean {
 
 export const env = {
   appUrl: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
-  demoMode: process.env.DEMO_MODE !== "false",
-  googleClientId: process.env.GOOGLE_CLIENT_ID,
-  googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  appMode: process.env.APP_MODE ?? "demo",
+  demoMode: process.env.DEMO_MODE !== "false" || process.env.APP_MODE === "demo",
+  authSecret: process.env.AUTH_SECRET,
+  googleClientId: process.env.AUTH_GOOGLE_ID,
+  googleClientSecret: process.env.AUTH_GOOGLE_SECRET,
+  googleCloudProjectId: process.env.GOOGLE_CLOUD_PROJECT_ID,
+  googleCalendarWebhookSecret: process.env.GOOGLE_CALENDAR_WEBHOOK_SECRET,
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-  supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  supabasePublishableKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+  supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+  openaiApiKey: process.env.OPENAI_API_KEY,
   resendApiKey: process.env.RESEND_API_KEY,
-  voiceProvider: process.env.VOICE_PROVIDER,
-  voiceWebhookSecret: process.env.VOICE_WEBHOOK_SECRET,
+  resendFromEmail: process.env.RESEND_FROM_EMAIL,
+  twilioAccountSid: process.env.TWILIO_ACCOUNT_SID,
+  twilioAuthToken: process.env.TWILIO_AUTH_TOKEN,
+  twilioPhoneNumber: process.env.TWILIO_PHONE_NUMBER,
+  twilioWebhookSecret: process.env.TWILIO_WEBHOOK_SECRET,
 };
 
 export function getIntegrationStatus(): IntegrationStatus {
   return {
-    googleCalendar: hasEnv("GOOGLE_CLIENT_ID") && hasEnv("GOOGLE_CLIENT_SECRET") ? "ready" : "demo",
-    supabase: hasEnv("NEXT_PUBLIC_SUPABASE_URL") && hasEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY") ? "ready" : "demo",
+    googleCalendar: hasEnv("AUTH_GOOGLE_ID") && hasEnv("AUTH_GOOGLE_SECRET") ? "ready" : "demo",
+    supabase:
+      hasEnv("NEXT_PUBLIC_SUPABASE_URL") &&
+      hasEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY") &&
+      hasEnv("SUPABASE_SERVICE_ROLE_KEY")
+        ? "ready"
+        : "demo",
     resend: hasEnv("RESEND_API_KEY") ? "ready" : "demo",
-    voice: hasEnv("VOICE_PROVIDER") ? "ready" : "demo",
+    voice: hasEnv("TWILIO_ACCOUNT_SID") && hasEnv("TWILIO_AUTH_TOKEN") && hasEnv("TWILIO_PHONE_NUMBER") ? "ready" : "demo",
   };
 }

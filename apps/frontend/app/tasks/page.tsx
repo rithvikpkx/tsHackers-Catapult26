@@ -13,6 +13,12 @@ export default async function TasksPage() {
       </section>
 
       <div className="space-y-4">
+        {snapshot.tasks.length === 0 ? (
+          <article className="rounded-card border border-dashed border-line bg-surface/90 px-5 py-10 text-center shadow-soft">
+            <p className="text-lg font-semibold tracking-[-0.03em]">No tasks yet</p>
+            <p className="mt-2 text-sm text-muted">Sync your calendar from Admin to import deadlines or generate starter tasks.</p>
+          </article>
+        ) : null}
         {snapshot.tasks.map((task) => (
           <article
             key={task.id}

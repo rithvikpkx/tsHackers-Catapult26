@@ -12,6 +12,7 @@ export function generateIntervention(
   risk: RiskAssessment | undefined,
   scheduleEvents: ScheduleEvent[],
   profile: DistortionProfileSummary,
+  nowIso: string = DEMO_NOW,
 ): InterventionProposal | undefined {
   if (!task || !risk || risk.riskLevel !== "high") {
     return undefined;
@@ -25,10 +26,26 @@ export function generateIntervention(
     return undefined;
   }
 
-  const focusStart = "2026-04-05T18:00:00-04:00";
-  const focusEnd = plusMinutes(focusStart, 240);
+  const now = new Date(nowIso);
+  const due = new Date(task.dueDate);
+  const focusStartDate = new Date(now);
+  focusStartDate.setHours(profile.bestFocusStartHour, 0, 0, 0);
+  if (focusStartDate <= now) {
+    focusStartDate.setDate(focusStartDate.getDate() + 1);
+  }
+
   const extraMinutes = 240;
-  const improvedAvailableMinutes = computeAvailableFocusMinutes(scheduleEvents, task.dueDate, profile) + extraMinutes;
+  const latestPossibleStart = new Date(due.getTime() - extraMinutes * 60000);
+  if (focusStartDate > latestPossibleStart) {
+    focusStartDate.setTime(latestPossibleStart.getTime());
+  }
+  if (focusStartDate < now) {
+    focusStartDate.setTime(now.getTime());
+  }
+
+  const focusStart = focusStartDate.toISOString();
+  const focusEnd = plusMinutes(focusStart, 240);
+  const improvedAvailableMinutes = computeAvailableFocusMinutes(scheduleEvents, task.dueDate, profile, nowIso) + extraMinutes;
   const improvedRisk = clamp(
     risk.riskProbability - Math.min(0.56, extraMinutes / Math.max(risk.predictedRequiredMinutes, 1) * 0.58),
   );

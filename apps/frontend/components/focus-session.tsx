@@ -28,15 +28,6 @@ function BoltIcon() {
 export function FocusSession({ task }: FocusSessionProps) {
   const currentStep = task.subtasks.find((subtask) => subtask.status !== "completed");
   const [pendingId, setPendingId] = useState<string | null>(null);
-
-  if (!currentStep) {
-    return (
-      <div className="rounded-[1.8rem] border border-line bg-canvas px-5 py-5">
-        <p className="text-lg font-semibold">All steps complete</p>
-      </div>
-    );
-  }
-
   const progressPercent = Math.round(task.progress.completionRatio * 100);
   const [animatedProgress, setAnimatedProgress] = useState(0);
 
@@ -46,6 +37,14 @@ export function FocusSession({ task }: FocusSessionProps) {
     });
     return () => window.cancelAnimationFrame(id);
   }, [progressPercent]);
+
+  if (!currentStep) {
+    return (
+      <div className="rounded-[1.8rem] border border-line bg-canvas px-5 py-5">
+        <p className="text-lg font-semibold">All steps complete</p>
+      </div>
+    );
+  }
 
   const isActive = currentStep.status === "in_progress";
 

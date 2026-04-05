@@ -38,8 +38,9 @@ export function computeAvailableFocusMinutes(
   scheduleEvents: ScheduleEvent[],
   dueDate: string,
   profile: DistortionProfileSummary,
+  nowIso: string = DEMO_NOW,
 ): number {
-  const now = new Date(DEMO_NOW);
+  const now = new Date(nowIso);
   const due = new Date(dueDate);
   const windows = buildPreferredWindows(now, due, profile.bestFocusStartHour, profile.bestFocusEndHour);
 
@@ -55,11 +56,16 @@ export function computeAvailableFocusMinutes(
   }, 0);
 }
 
-export function assessRisk(task: NormalizedTask, scheduleEvents: ScheduleEvent[], profile: DistortionProfileSummary): RiskAssessment {
+export function assessRisk(
+  task: NormalizedTask,
+  scheduleEvents: ScheduleEvent[],
+  profile: DistortionProfileSummary,
+  nowIso: string = DEMO_NOW,
+): RiskAssessment {
   const multiplier = profile.underestimationMultipliers[task.assignmentType] ?? profile.underestimationMultipliers.other;
   const predictedRequiredMinutes = Math.round(task.progress.remainingMinutes * multiplier);
   const predictedDelayMinutes = task.progress.derivedStartTime ? 0 : Math.round(profile.meanStartDelayMinutes * (task.assignmentType === "essay" ? 0.8 : 1));
-  const availableMinutesBeforeDue = computeAvailableFocusMinutes(scheduleEvents, task.dueDate, profile);
+  const availableMinutesBeforeDue = computeAvailableFocusMinutes(scheduleEvents, task.dueDate, profile, nowIso);
 
   const ambiguityScore = task.assignmentType === "essay" ? 0.16 : task.assignmentType === "programming_assignment" ? 0.12 : 0.08;
   const delayScore = clamp(predictedDelayMinutes / 2400, 0, 0.35);

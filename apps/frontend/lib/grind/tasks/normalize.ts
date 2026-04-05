@@ -26,6 +26,12 @@ function inferSubject(title: string): string {
   if (text.includes("os") || text.includes("cs 252")) {
     return "cs252";
   }
+  if (text.includes("cs 180")) {
+    return "cs180";
+  }
+  if (text.includes("ma 261")) {
+    return "ma261";
+  }
   if (text.includes("history")) {
     return "hist300";
   }
@@ -49,8 +55,8 @@ function estimateBaseMinutes(assignmentType: AssignmentType, title: string): num
   return 90;
 }
 
-function detectPriority(dueDate: string): "low" | "medium" | "high" {
-  const diffHours = (new Date(dueDate).getTime() - new Date(DEMO_NOW).getTime()) / (1000 * 60 * 60);
+function detectPriority(dueDate: string, nowIso: string): "low" | "medium" | "high" {
+  const diffHours = (new Date(dueDate).getTime() - new Date(nowIso).getTime()) / (1000 * 60 * 60);
   if (diffHours < 48) {
     return "high";
   }
@@ -61,8 +67,17 @@ function detectPriority(dueDate: string): "low" | "medium" | "high" {
 }
 
 function toScheduleEvent(event: RawCalendarEvent, userId: string): ScheduleEvent {
-  const lower = `${event.title} ${event.description}`.toLowerCase();
+  const lower = `${event.title} ${event.description} ${event.calendarName}`.toLowerCase();
   const isMovable = lower.includes("gym") || lower.includes("club") || lower.includes("social");
+  const isClassLike =
+    lower.includes("lecture") ||
+    lower.includes("class") ||
+    lower.includes("lab") ||
+    lower.includes("recitation") ||
+    lower.includes("discussion") ||
+    lower.includes("uniti") ||
+    lower.includes("unitime") ||
+    /[a-z]{2,4}\s?\d{3}/.test(lower);
   return {
     id: `schedule-${event.id}`,
     userId,
@@ -70,19 +85,23 @@ function toScheduleEvent(event: RawCalendarEvent, userId: string): ScheduleEvent
     title: event.title,
     startsAt: event.startsAt,
     endsAt: event.endsAt,
-    eventCategory: lower.includes("lecture") || lower.includes("class") ? "class" : "personal",
+    eventCategory: isClassLike ? "class" : "personal",
     isMovable,
     movementCostScore: isMovable ? (lower.includes("gym") ? 0.25 : 0.4) : 0.95,
-    summary: isMovable ? "Movable if success odds materially improve." : "Fixed commitment.",
+    summary: isClassLike ? `Class from ${event.calendarName}` : isMovable ? "Movable if success odds materially improve." : `From ${event.calendarName}`,
   };
 }
 
 function looksActionable(event: RawCalendarEvent): boolean {
-  const text = `${event.title} ${event.description}`.toLowerCase();
-  return /(due|essay|worksheet|homework|problem set|assignment|paper)/.test(text);
+  const text = `${event.title} ${event.description} ${event.calendarName}`.toLowerCase();
+  return /(due|essay|worksheet|homework|problem set|assignment|paper|quiz|exam|brightspace|submission)/.test(text);
 }
 
-export function normalizeEvents(rawEvents: RawCalendarEvent[], userId: string): {
+export function normalizeEvents(
+  rawEvents: RawCalendarEvent[],
+  userId: string,
+  nowIso: string = DEMO_NOW,
+): {
   tasks: NormalizedTask[];
   scheduleEvents: ScheduleEvent[];
 } {
@@ -122,7 +141,7 @@ export function normalizeEvents(rawEvents: RawCalendarEvent[], userId: string): 
       confidenceScore: assignmentType === "other" ? 0.62 : 0.88,
       taskStatus: "upcoming",
       isMovable: false,
-      taskPriority: detectPriority(event.startsAt),
+      taskPriority: detectPriority(event.startsAt, nowIso),
       confidenceLabel: assignmentType === "other" ? "medium" : "high",
       explanation: "",
       subtasks: [],

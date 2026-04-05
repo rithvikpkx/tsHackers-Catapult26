@@ -52,13 +52,16 @@ function HealthGraphic({ value }: { value: number }) {
 export default async function HomePage() {
   const snapshot = await loadScenario();
   const highestRiskTask = snapshot.highestRiskTask;
+  const learningMode = highestRiskTask ? highestRiskTask.riskProbability < 0.45 : true;
+  const upcomingAssignments = snapshot.tasks.slice(0, 3);
+  const upcomingClasses = snapshot.scheduleEvents.filter((event) => event.eventCategory === "class").slice(0, 4);
 
   return (
     <main>
       <section className="relative overflow-hidden rounded-card border border-line bg-surface/95 p-7 shadow-soft">
         <div className="absolute right-[-5rem] top-[-4rem] h-40 w-40 rounded-full bg-accent/10 blur-3xl" />
         <div className="absolute left-8 top-8 h-20 w-20 rounded-full bg-risk/8 blur-2xl" />
-        <p className="text-xs uppercase tracking-[0.18em] text-muted">Highest risk</p>
+        <p className="text-xs uppercase tracking-[0.18em] text-muted">{learningMode ? "Learning mode" : "Highest risk"}</p>
         {highestRiskTask ? (
           <div className="mt-4 space-y-6">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
@@ -68,8 +71,16 @@ export default async function HomePage() {
                   {highestRiskTask.subject.toUpperCase()} · due {formatShortDate(highestRiskTask.dueDate)}
                 </p>
               </div>
-              <div className="flex h-24 w-24 items-center justify-center rounded-full border border-risk/20 bg-[radial-gradient(circle_at_30%_30%,rgba(185,65,46,0.24),rgba(255,255,255,0.94))]">
-                <span className="text-3xl font-semibold tracking-[-0.05em] text-risk">{formatPercent(highestRiskTask.riskProbability)}</span>
+              <div
+                className={`flex h-24 w-24 items-center justify-center rounded-full border ${
+                  learningMode
+                    ? "border-safe/20 bg-[radial-gradient(circle_at_30%_30%,rgba(44,122,75,0.18),rgba(255,255,255,0.94))]"
+                    : "border-risk/20 bg-[radial-gradient(circle_at_30%_30%,rgba(185,65,46,0.24),rgba(255,255,255,0.94))]"
+                }`}
+              >
+                <span className={`text-3xl font-semibold tracking-[-0.05em] ${learningMode ? "text-safe" : "text-risk"}`}>
+                  {formatPercent(highestRiskTask.riskProbability)}
+                </span>
               </div>
             </div>
 
@@ -87,7 +98,13 @@ export default async function HomePage() {
               />
             </div>
 
-            <div className="rounded-[2rem] border border-line bg-[linear-gradient(135deg,rgba(185,65,46,0.04),rgba(255,255,255,0.95))] px-5 py-4">
+            <div
+              className={`rounded-[2rem] border border-line px-5 py-4 ${
+                learningMode
+                  ? "bg-[linear-gradient(135deg,rgba(44,122,75,0.05),rgba(255,255,255,0.95))]"
+                  : "bg-[linear-gradient(135deg,rgba(185,65,46,0.04),rgba(255,255,255,0.95))]"
+              }`}
+            >
               <p className="text-sm leading-6 text-muted">{highestRiskTask.explanation}</p>
             </div>
 
@@ -104,11 +121,18 @@ export default async function HomePage() {
             </div>
           </div>
         ) : (
-          <p className="mt-4 text-sm text-muted">No active risk detected.</p>
+          <div className="mt-4 space-y-4">
+            <p className="text-sm text-muted">No active risk detected yet.</p>
+            {snapshot.rawEvents.length > 0 ? (
+              <div className="rounded-[2rem] border border-line bg-[linear-gradient(135deg,rgba(31,75,153,0.04),rgba(255,255,255,0.95))] px-5 py-4">
+                <p className="text-sm leading-6 text-muted">Calendar connected. Grind is pulling your upcoming classes and assignment deadlines so it can build your schedule model.</p>
+              </div>
+            ) : null}
+          </div>
         )}
       </section>
 
-      {highestRiskTask ? (
+      {highestRiskTask || upcomingAssignments.length > 0 || upcomingClasses.length > 0 ? (
         <section className="mt-5 grid gap-5 xl:grid-cols-[1.05fr_0.95fr_0.9fr]">
           <SectionCard title="Week health" eyebrow="Overview">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
@@ -176,9 +200,53 @@ export default async function HomePage() {
                   Open interventions
                 </Link>
               </div>
+            ) : learningMode ? (
+              <div className="space-y-3">
+                <div className="rounded-[1.8rem] bg-[linear-gradient(145deg,rgba(44,122,75,0.08),rgba(255,255,255,0.82))] px-4 py-4">
+                  <p className="text-sm font-semibold tracking-[-0.03em]">
+                    {highestRiskTask ? "No urgent risk yet. Start working and Grind will learn your timing." : "No urgent risk yet. Your calendar is connected and the next academic events are ready below."}
+                  </p>
+                </div>
+                {highestRiskTask ? (
+                  <Link
+                    className="inline-flex rounded-full border border-line px-4 py-2 text-sm text-muted transition hover:border-accent/35 hover:text-ink"
+                    href={`/focus?taskId=${highestRiskTask.id}`}
+                  >
+                    Start this task
+                  </Link>
+                ) : null}
+              </div>
             ) : (
               <p className="text-sm text-muted">No intervention generated yet.</p>
             )}
+          </SectionCard>
+
+          <SectionCard title="Upcoming" eyebrow="Calendar">
+            <div className="space-y-3">
+              {upcomingAssignments.map((task) => (
+                <div key={task.id} className="rounded-[1.8rem] bg-canvas px-4 py-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold tracking-[-0.03em]">{task.title}</p>
+                    <span className="text-[11px] uppercase tracking-[0.14em] text-muted">Assignment</span>
+                  </div>
+                  <p className="mt-1 text-sm text-muted">
+                    {task.subject.toUpperCase()} · due {formatShortDate(task.dueDate)}
+                  </p>
+                </div>
+              ))}
+              {upcomingClasses.map((event) => (
+                <div key={event.id} className="rounded-[1.8rem] bg-canvas px-4 py-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold tracking-[-0.03em]">{event.title}</p>
+                    <span className="text-[11px] uppercase tracking-[0.14em] text-muted">Class</span>
+                  </div>
+                  <p className="mt-1 text-sm text-muted">{formatShortDate(event.startsAt)}</p>
+                </div>
+              ))}
+              {upcomingAssignments.length === 0 && upcomingClasses.length === 0 ? (
+                <p className="text-sm text-muted">No upcoming academic events found yet.</p>
+              ) : null}
+            </div>
           </SectionCard>
         </section>
       ) : null}

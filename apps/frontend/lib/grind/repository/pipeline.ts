@@ -36,10 +36,10 @@ function hydrateTask(task: NormalizedTask, subtaskEdits: DemoRepositoryState["su
 }
 
 export function runPipeline(state: DemoRepositoryState = createInitialDemoState()): ScenarioSnapshot {
-  const { tasks: rawTasks, scheduleEvents } = normalizeEvents(state.rawEvents, state.user.id);
+  const { tasks: rawTasks, scheduleEvents } = normalizeEvents(state.rawEvents, state.user.id, DEMO_NOW);
   const profile = buildDistortionProfile(state.user.id, state.observations);
   const tasks = rawTasks.map((task) => hydrateTask(task, state.subtaskEdits, profile.meanStartDelayMinutes));
-  const risks = tasks.map((task) => assessRisk(task, scheduleEvents, profile));
+  const risks = tasks.map((task) => assessRisk(task, scheduleEvents, profile, DEMO_NOW));
 
   const tasksWithRisk = tasks.map((task) => {
     const risk = risks.find((entry) => entry.taskId === task.id);
@@ -56,7 +56,7 @@ export function runPipeline(state: DemoRepositoryState = createInitialDemoState(
 
   const highestRiskTask = [...tasksWithRisk].sort((left, right) => right.riskProbability - left.riskProbability)[0];
   const highestRisk = risks.find((risk) => risk.taskId === highestRiskTask?.id);
-  const intervention = generateIntervention(highestRiskTask, highestRisk, scheduleEvents, profile);
+  const intervention = generateIntervention(highestRiskTask, highestRisk, scheduleEvents, profile, DEMO_NOW);
 
   const hydratedTasks = tasksWithRisk.map((task) =>
     task.id === highestRiskTask?.id && intervention
