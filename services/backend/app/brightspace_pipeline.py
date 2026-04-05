@@ -79,8 +79,6 @@ WEEKDAY_ORDER = [
     "Saturday",
     "Sunday",
 ]
-MODEL_LOOKBACK_DAYS = 30
-IMPORT_LIMIT = 20
 
 
 @dataclass
@@ -97,15 +95,15 @@ def build_dashboard_from_brightspace(payload: BrightspaceImportRequest) -> tuple
     now = datetime.now(timezone.utc)
     ical_text = _download_calendar(payload.brightspace_calendar_url)
     parsed_events = _parse_ical_events(ical_text)
-    relevant_events = [event for event in parsed_events if event.due >= now - timedelta(days=MODEL_LOOKBACK_DAYS)]
+    relevant_events = [event for event in parsed_events if event.due >= now - timedelta(days=3)]
     relevant_events.sort(key=lambda event: event.due)
 
     if not relevant_events:
-        raise ValueError("No recent or upcoming calendar events were found in the Brightspace iCalendar feed.")
+        raise ValueError("No upcoming calendar events were found in the Brightspace iCalendar feed.")
 
-    selected_events = relevant_events[:IMPORT_LIMIT]
+    selected_events = relevant_events[:20]
     personalization = _derive_personalization(selected_events, payload.grade_year, now)
-    initial_distortion_multiplier = _estimate_distortion_multiplier(selected_events, personalization)
+    distortion_multiplier = _estimate_distortion_multiplier(selected_events, personalization)
     bundle = ensure_bundle()
     snapshots = _build_course_snapshots(selected_events, payload.grade_year, now)
 
@@ -116,7 +114,7 @@ def build_dashboard_from_brightspace(payload: BrightspaceImportRequest) -> tuple
         estimate_hours = _estimate_effort_hours(task_type, event.summary)
         hours_until_due = max((event.due - now).total_seconds() / 3600.0, 0.0)
         start_delay_hours = _estimate_start_delay_hours(hours_until_due, personalization)
-        corrected_effort_hours = round(estimate_hours * initial_distortion_multiplier + start_delay_hours * 0.08, 2)
+        corrected_effort_hours = round(estimate_hours * distortion_multiplier + start_delay_hours * 0.08, 2)
         status = _status_for_due_date(event.due, now)
 
         snapshot = snapshots[event.course]
@@ -167,13 +165,11 @@ def build_dashboard_from_brightspace(payload: BrightspaceImportRequest) -> tuple
         )
 
     scored_tasks.sort(key=lambda item: (-(item.failure_risk or 0.0), item.due_date))
-    distortion_multiplier = _realized_distortion_multiplier(scored_tasks, initial_distortion_multiplier)
-    visible_tasks = [task for task in scored_tasks if task.due_date >= now]
-    frontend_tasks = [_to_dashboard_task(task, now) for task in visible_tasks[:8]]
+    frontend_tasks = [_to_dashboard_task(task, now) for task in scored_tasks[:8]]
     metrics = _build_metrics(scored_tasks, distortion_multiplier, now)
     resting_rate = _build_resting_rate(scored_tasks, personalization)
-    distortion_profile = _build_distortion_profile(selected_events, personalization, distortion_multiplier, scored_tasks)
-    intervention = _build_intervention(visible_tasks, now)
+    distortion_profile = _build_distortion_profile(selected_events, personalization, distortion_multiplier)
+    intervention = _build_intervention(scored_tasks, now)
     summary = _build_summary(metrics.atRiskCount, metrics.healthLabel)
 
     response = BrightspaceImportResponse(
@@ -436,21 +432,6 @@ def _estimate_distortion_multiplier(events: list[ParsedCalendarEvent], personali
     return round(multiplier, 1)
 
 
-def _realized_distortion_multiplier(tasks: list[Task], fallback_multiplier: float) -> float:
-    if not tasks:
-        return round(fallback_multiplier, 1)
-
-    ratios: list[float] = []
-    for task in tasks:
-        estimate = max(task.estimated_effort_hours, 0.25)
-        corrected = task.corrected_effort_hours or estimate
-        ratios.append(corrected / estimate)
-
-    realized = clamp(sum(ratios) / len(ratios), 1.0, 3.2)
-    blended = 0.7 * realized + 0.3 * fallback_multiplier
-    return round(clamp(blended, 1.0, 3.2), 1)
-
-
 def _build_course_snapshots(
     events: list[ParsedCalendarEvent],
     grade_year: str,
@@ -581,9 +562,7 @@ def _build_metrics(tasks: list[Task], distortion_multiplier: float, now: datetim
         return DashboardMetrics(healthScore=70, healthLabel="Stable", atRiskCount=0, distortionMultiplier=round(distortion_multiplier, 1))
 
     average_failure = sum(task.failure_risk or 0.0 for task in tasks) / len(tasks)
-    average_course_prior = sum(task.course_risk_prior or 0.0 for task in tasks) / len(tasks)
-    blended_model_risk = 0.65 * average_failure + 0.35 * average_course_prior
-    raw_health = (1.0 - blended_model_risk) * 100.0 - (distortion_multiplier - 1.0) * 8.0
+    raw_health = (1.0 - average_failure) * 100.0 - (distortion_multiplier - 1.0) * 8.0
     health_score = int(round(clamp(raw_health, 18.0, 97.0)))
     if health_score >= 75:
         health_label = "Stable"
@@ -593,7 +572,7 @@ def _build_metrics(tasks: list[Task], distortion_multiplier: float, now: datetim
         health_label = "Fragile"
 
     week_horizon = now + timedelta(days=7)
-    at_risk_count = sum(1 for task in tasks if (task.failure_risk or 0.0) >= 0.65 and task.due_date <= week_horizon)
+    at_risk_count = sum(1 for task in tasks if (task.failure_risk or 0.0) >= 0.7 and task.due_date <= week_horizon)
     return DashboardMetrics(
         healthScore=health_score,
         healthLabel=health_label,
@@ -614,28 +593,16 @@ def _build_distortion_profile(
     events: list[ParsedCalendarEvent],
     personalization: PersonalizationSignals,
     distortion_multiplier: float,
-    tasks: list[Task],
 ) -> list[str]:
     start_delay_days = personalization.start_lag_hours / 24.0
     focus_window = _best_focus_window(events)
     constrained_day = _most_constrained_weekday(events)
-    grade_drag_points = _estimated_grade_drag_points(tasks)
     return [
         f"You underestimate programming work by {distortion_multiplier:.1f}x",
         f"You start work {start_delay_days:.1f} days later than planned",
         f"Your best focus window is {focus_window}",
         f"{constrained_day} schedule leaves too little uninterrupted time",
-        f"Current trajectory implies roughly a {grade_drag_points:.1f}-point grade drag this term",
     ]
-
-
-def _estimated_grade_drag_points(tasks: list[Task]) -> float:
-    if not tasks:
-        return 0.0
-    average_failure = sum(task.failure_risk or 0.0 for task in tasks) / len(tasks)
-    average_course_prior = sum(task.course_risk_prior or 0.0 for task in tasks) / len(tasks)
-    blended_model_risk = 0.65 * average_failure + 0.35 * average_course_prior
-    return round(clamp(blended_model_risk * 18.0, 0.0, 18.0), 1)
 
 
 def _best_focus_window(events: list[ParsedCalendarEvent]) -> str:
