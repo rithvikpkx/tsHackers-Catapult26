@@ -2,9 +2,10 @@
 
 import { startTransition, useEffect, useState } from "react";
 import { completeSubtaskAction, startSubtaskAction } from "@/app/actions";
+import { LiveTime } from "@/components/live-time";
 import { StatTile } from "@/components/stat-tile";
 import type { NormalizedTask } from "@/lib/grind/contracts";
-import { formatMinutes, formatShortDate } from "@/lib/grind/ui/format";
+import { formatMinutes } from "@/lib/grind/ui/format";
 
 type FocusSessionProps = {
   task: NormalizedTask;
@@ -101,7 +102,7 @@ export function FocusSession({ task }: FocusSessionProps) {
         <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <StatTile label="Current step" value={`${currentStep.sequence + 1}`} tone="default" size="compact" />
           <StatTile label="Time needed" value={formatMinutes(currentStep.estimatedMinutes)} tone="default" size="compact" />
-          <StatTile label="Due" value={formatShortDate(task.dueDate)} tone="risk" size="compact" />
+          <StatTile label="Due" value={<LiveTime value={task.dueDate} />} tone="risk" size="compact" />
           <StatTile label="Progress" value={`${progressPercent}%`} tone="safe" size="compact" />
         </div>
       </div>
@@ -143,7 +144,7 @@ export function FocusSession({ task }: FocusSessionProps) {
                 <div className="flex items-center gap-3">
                   <span className={`relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${statusTone}`}>
                     {isWorking ? <span className="absolute inset-0 rounded-full border border-accent/30 animate-ping" /> : null}
-                    {subtask.status === "completed" ? "✓" : subtask.sequence + 1}
+                    {subtask.status === "completed" ? "OK" : subtask.sequence + 1}
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-ink">

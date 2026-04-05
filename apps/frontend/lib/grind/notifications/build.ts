@@ -6,7 +6,7 @@ export function buildNotifications(
   risk: RiskAssessment | undefined,
   intervention: InterventionProposal | undefined,
 ): NotificationPayload[] {
-  if (!highestRiskTask || !risk) {
+  if (!highestRiskTask || !risk || risk.riskProbability <= 0.01) {
     return [];
   }
 

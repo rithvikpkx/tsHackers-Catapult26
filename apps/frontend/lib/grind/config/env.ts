@@ -17,9 +17,10 @@ export const env = {
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
   supabasePublishableKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-  purdueGenAiApiKey: process.env.PURDUE_GENAI_API_KEY,
-  purdueGenAiModel: process.env.PURDUE_GENAI_MODEL ?? "llama3.1:latest",
-  purdueGenAiBaseUrl: process.env.PURDUE_GENAI_BASE_URL ?? "https://genai.rcac.purdue.edu/api",
+  geminiApiKey: process.env.GEMINI_API_KEY ?? process.env.PURDUE_GENAI_API_KEY,
+  geminiModel: process.env.GEMINI_MODEL ?? process.env.PURDUE_GENAI_MODEL ?? "gemini-3-flash-preview",
+  geminiBaseUrl:
+    process.env.GEMINI_BASE_URL ?? process.env.PURDUE_GENAI_BASE_URL ?? "https://generativelanguage.googleapis.com/v1beta",
   openaiApiKey: process.env.OPENAI_API_KEY,
   resendApiKey: process.env.RESEND_API_KEY,
   resendFromEmail: process.env.RESEND_FROM_EMAIL,

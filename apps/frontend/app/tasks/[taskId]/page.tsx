@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
-import { ChecklistEditor } from "@/components/checklist-editor";
-import { SectionCard } from "@/components/section-card";
 import { loadScenario } from "@/app/lib/api";
+import { ChecklistEditor } from "@/components/checklist-editor";
+import { LiveTime } from "@/components/live-time";
+import { SectionCard } from "@/components/section-card";
 import { formatMinutes, formatPercent, formatShortDate } from "@/lib/grind/ui/format";
 
 export default async function TaskDetailPage({ params }: { params: Promise<{ taskId: string }> }) {
@@ -17,12 +18,14 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ tas
 
   return (
     <main className="grid gap-5 lg:grid-cols-[1.35fr_0.95fr]">
-      <SectionCard title={task.title} eyebrow={`${task.subject.toUpperCase()} · ${task.assignmentType.replaceAll("_", " ")}`}>
+      <SectionCard title={task.title} eyebrow={`${task.subject.toUpperCase()} / ${task.assignmentType.replaceAll("_", " ")}`}>
         <div className="space-y-5">
           <div className="grid gap-3 sm:grid-cols-4">
             <div className="rounded-3xl bg-canvas px-4 py-3">
               <p className="text-sm text-muted">Due</p>
-              <p className="mt-1 text-base font-semibold">{formatShortDate(task.dueDate)}</p>
+              <div className="mt-1 text-base font-semibold">
+                <LiveTime value={task.dueDate} />
+              </div>
             </div>
             <div className="rounded-3xl bg-canvas px-4 py-3">
               <p className="text-sm text-muted">Risk</p>

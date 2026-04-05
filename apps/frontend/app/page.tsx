@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { loadScenario } from "@/app/lib/api";
+import { LiveTime } from "@/components/live-time";
 import { SectionCard } from "@/components/section-card";
 import { StatTile } from "@/components/stat-tile";
-import { loadScenario } from "@/app/lib/api";
 import { formatMinutes, formatPercent, formatShortDate } from "@/lib/grind/ui/format";
 
 function HealthGraphic({ value }: { value: number }) {
@@ -68,7 +69,7 @@ export default async function HomePage() {
               <div className="max-w-3xl">
                 <h1 className="text-4xl font-semibold tracking-[-0.06em] sm:text-5xl">{highestRiskTask.title}</h1>
                 <p className="mt-3 text-sm text-muted">
-                  {highestRiskTask.subject.toUpperCase()} · due {formatShortDate(highestRiskTask.dueDate)}
+                  {highestRiskTask.subject.toUpperCase()} / due <LiveTime value={highestRiskTask.dueDate} variant="inline" />
                 </p>
               </div>
               <div
@@ -86,7 +87,7 @@ export default async function HomePage() {
 
             <div className="grid gap-3 md:grid-cols-3">
               <StatTile label="Corrected estimate" value={formatMinutes(highestRiskTask.estimatedEffortMinutesAdjusted)} />
-              <StatTile label="Recommended start" value={formatShortDate(highestRiskTask.recommendedStartTime)} />
+              <StatTile label="Recommended start" value={<LiveTime value={highestRiskTask.recommendedStartTime} semantics="generic" />} />
               <StatTile
                 label="Recovery"
                 value={
@@ -230,7 +231,7 @@ export default async function HomePage() {
                     <span className="text-[11px] uppercase tracking-[0.14em] text-muted">Assignment</span>
                   </div>
                   <p className="mt-1 text-sm text-muted">
-                    {task.subject.toUpperCase()} · due {formatShortDate(task.dueDate)}
+                    {task.subject.toUpperCase()} / due <LiveTime value={task.dueDate} variant="inline" />
                   </p>
                 </div>
               ))}

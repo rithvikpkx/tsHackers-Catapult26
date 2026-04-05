@@ -17,14 +17,14 @@ Fresh MVP scaffold for a modular academic execution app.
 
 ## Next step
 
-Set environment variables in [apps/frontend/.env.example](/Users/rithvikpraveenkumar/Repos/tsHackers-Catapult26/apps/frontend/.env.example), then run the frontend from `apps/frontend`.
+Set environment variables in `apps/frontend/.env.example`, then run the frontend from `apps/frontend`.
 
-## Purdue GenAI Studio
+## Google AI Studio
 
-The live subtask breakdown pipeline can use Purdue GenAI Studio's OpenAI-compatible chat endpoint for higher-quality task decomposition.
+The live subtask breakdown pipeline can use Google AI Studio's native Gemini API for higher-quality task decomposition. Live sync batches up to 3 tasks per Gemini call, processes those batches sequentially, and applies conservative pacing plus 429 backoff to reduce rate-limit pressure.
 
 Set these values in `apps/frontend/.env.local`:
 
-- `PURDUE_GENAI_API_KEY`
-- `PURDUE_GENAI_MODEL` (default: `llama3.1:latest`)
-- `PURDUE_GENAI_BASE_URL` (default: `https://genai.rcac.purdue.edu/api`)
+- `GEMINI_API_KEY`
+- `GEMINI_MODEL` (default: `gemini-3-flash-preview`)
+- `GEMINI_BASE_URL` (default: `https://generativelanguage.googleapis.com/v1beta`)

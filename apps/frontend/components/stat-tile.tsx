@@ -1,6 +1,8 @@
+import type { ReactNode } from "react";
+
 type StatTileProps = {
   label: string;
-  value: string;
+  value: ReactNode;
   tone?: "default" | "risk" | "safe";
   size?: "default" | "compact";
 };
@@ -28,7 +30,7 @@ export function StatTile({ label, value, tone = "default", size = "default" }: S
           <span className="h-2.5 w-2.5 rounded-full bg-current" />
         </span>
       </div>
-      <p className={`${valueSize} font-semibold tracking-[-0.06em] ${valueTone}`}>{value}</p>
+      <div className={`${valueSize} font-semibold tracking-[-0.06em] ${valueTone}`}>{value}</div>
     </div>
   );
 }

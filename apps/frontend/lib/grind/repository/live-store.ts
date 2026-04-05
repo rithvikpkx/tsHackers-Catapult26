@@ -13,7 +13,10 @@ import type {
   Subtask,
 } from "@/lib/grind/contracts";
 import { getIntegrationStatus } from "@/lib/grind/config/env";
+import { generateIntervention } from "@/lib/grind/interventions/generate";
+import { buildNotifications } from "@/lib/grind/notifications/build";
 import { buildDistortionProfile } from "@/lib/grind/profile/model";
+import { assessRisk } from "@/lib/grind/risk/score";
 import { getSupabaseAdminClient } from "@/lib/grind/supabase/admin";
 import { buildProgress, deriveTaskStatus } from "@/lib/grind/tasks/progress";
 
@@ -72,43 +75,6 @@ type ProfileRow = {
   source_mode: DistortionProfileSummary["sourceMode"];
   availability_mismatch_score: number;
   reliability_score: number;
-};
-
-type RiskRow = {
-  id: string;
-  task_id: string;
-  assessed_at: string;
-  risk_probability: number;
-  success_probability: number;
-  risk_level: RiskAssessment["riskLevel"];
-  available_minutes_before_due: number;
-  predicted_required_minutes: number;
-  bottleneck_type: RiskAssessment["bottleneckType"];
-};
-
-type InterventionRow = {
-  id: string;
-  task_id: string;
-  created_at: string;
-  intervention_type: InterventionProposal["interventionType"];
-  summary_text: string;
-  rationale_text: string;
-  success_probability_before: number;
-  success_probability_after: number;
-  risk_probability_before: number;
-  risk_probability_after: number;
-  calendar_changes_json: InterventionProposal["calendarChanges"];
-  status: InterventionProposal["status"];
-};
-
-type NotificationRow = {
-  id: string;
-  task_id: string | null;
-  intervention_id: string | null;
-  channel: NotificationPayload["channel"];
-  payload_json: Record<string, unknown>;
-  delivery_status: NotificationPayload["deliveryStatus"];
-  sent_at: string | null;
 };
 
 type UserRow = {
@@ -306,7 +272,7 @@ export async function getLiveScenarioSnapshot(): Promise<ScenarioSnapshot> {
     .eq("user_id", user.id)
     .like("source_event_id", "starter-%");
 
-  const [{ data: taskRows, error: tasksError }, { data: rawEventRows }, { data: scheduleEventRows }, { data: profileRow }, { data: riskRows }, { data: interventionRows }, { data: notificationRows }] =
+  const [{ data: taskRows, error: tasksError }, { data: rawEventRows }, { data: scheduleEventRows }, { data: profileRow }] =
     await Promise.all([
       supabase
         .from("tasks")
@@ -318,9 +284,6 @@ export async function getLiveScenarioSnapshot(): Promise<ScenarioSnapshot> {
       supabase.from("raw_calendar_events").select("*").eq("user_id", user.id).order("starts_at", { ascending: true }).limit(30),
       supabase.from("schedule_events").select("*").eq("user_id", user.id).order("starts_at", { ascending: true }).limit(30),
       supabase.from("distortion_profiles").select("*").eq("user_id", user.id).order("updated_at", { ascending: false }).limit(1).maybeSingle<ProfileRow>(),
-      supabase.from("risk_assessments").select("*").eq("user_id", user.id).order("assessed_at", { ascending: false }),
-      supabase.from("interventions").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
-      supabase.from("notifications").select("*").eq("user_id", user.id).order("sent_at", { ascending: false }),
     ]);
 
   if (tasksError) {
@@ -385,49 +348,35 @@ export async function getLiveScenarioSnapshot(): Promise<ScenarioSnapshot> {
           : "Upcoming calendar event",
   }));
 
-  const risks: RiskAssessment[] = ((riskRows ?? []) as RiskRow[]).map((row) => ({
-    id: row.id,
-    taskId: row.task_id,
-    assessedAt: row.assessed_at,
-    riskProbability: Number(row.risk_probability),
-    successProbability: Number(row.success_probability),
-    riskLevel: row.risk_level,
-    explanation: "",
-    availableMinutesBeforeDue: row.available_minutes_before_due,
-    predictedRequiredMinutes: row.predicted_required_minutes,
-    bottleneckType: row.bottleneck_type,
-    scheduleFragmentationScore: 0,
-  }));
-
-  const interventions: InterventionProposal[] = ((interventionRows ?? []) as InterventionRow[]).map((row) => ({
-    id: row.id,
-    taskId: row.task_id,
-    createdAt: row.created_at,
-    interventionType: row.intervention_type,
-    summaryText: row.summary_text,
-    rationaleText: row.rationale_text,
-    successProbabilityBefore: Number(row.success_probability_before),
-    successProbabilityAfter: Number(row.success_probability_after),
-    riskProbabilityBefore: Number(row.risk_probability_before),
-    riskProbabilityAfter: Number(row.risk_probability_after),
-    calendarChanges: row.calendar_changes_json ?? [],
-    status: row.status,
-  }));
-
-  const notifications: NotificationPayload[] = ((notificationRows ?? []) as NotificationRow[]).map((row) => ({
-    id: row.id,
-    channel: row.channel,
-    taskId: row.task_id ?? undefined,
-    interventionId: row.intervention_id ?? undefined,
-    subject: typeof row.payload_json?.subject === "string" ? row.payload_json.subject : "Notification",
-    preview: typeof row.payload_json?.preview === "string" ? row.payload_json.preview : "",
-    body: typeof row.payload_json?.body === "string" ? row.payload_json.body : "",
-    deliveryStatus: row.delivery_status,
-    sentAt: row.sent_at ?? undefined,
-  }));
-
-  const highestRiskTask = [...tasks].sort((left, right) => right.riskProbability - left.riskProbability)[0];
-  const selectedIntervention = interventions.find((entry) => entry.taskId === highestRiskTask?.id) ?? interventions[0];
+  const profile = mapProfile(profileRow as ProfileRow | null, user.id);
+  const nowIso = new Date().toISOString();
+  const risks = tasks.map((task) => assessRisk(task, scheduleEvents, profile, nowIso));
+  const tasksWithRisk = tasks.map((task) => {
+    const risk = risks.find((entry) => entry.taskId === task.id);
+    return risk
+      ? {
+          ...task,
+          riskProbability: risk.riskProbability,
+          successProbabilityBefore: risk.successProbability,
+          estimatedEffortMinutesAdjusted: risk.predictedRequiredMinutes,
+          explanation: risk.explanation,
+        }
+      : task;
+  });
+  const highestRiskTask = [...tasksWithRisk]
+    .filter((task) => task.riskProbability > 0.01 && task.taskStatus !== "submitted" && task.taskStatus !== "completed")
+    .sort((left, right) => right.riskProbability - left.riskProbability)[0];
+  const highestRisk = risks.find((entry) => entry.taskId === highestRiskTask?.id);
+  const selectedIntervention = generateIntervention(highestRiskTask, highestRisk, scheduleEvents, profile, nowIso);
+  const notifications = buildNotifications(highestRiskTask, highestRisk, selectedIntervention);
+  const hydratedTasks = tasksWithRisk.map((task) =>
+    selectedIntervention && task.id === selectedIntervention.taskId
+      ? {
+          ...task,
+          successProbabilityAfter: selectedIntervention.successProbabilityAfter,
+        }
+      : task,
+  );
 
   const liveUser: GrindUser = {
     id: user.id,
@@ -443,9 +392,9 @@ export async function getLiveScenarioSnapshot(): Promise<ScenarioSnapshot> {
     user: liveUser,
     rawEvents,
     scheduleEvents,
-    tasks,
-    highestRiskTask,
-    profile: mapProfile(profileRow as ProfileRow | null, user.id),
+    tasks: hydratedTasks,
+    highestRiskTask: hydratedTasks.find((task) => task.id === highestRiskTask?.id),
+    profile,
     risks,
     intervention: selectedIntervention,
     notifications,

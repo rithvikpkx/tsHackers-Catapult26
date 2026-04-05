@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { loadScenario } from "@/app/lib/api";
 import { DeleteTaskButton } from "@/components/delete-task-button";
-import { formatMinutes, formatPercent, formatShortDate } from "@/lib/grind/ui/format";
+import { LiveTime } from "@/components/live-time";
+import { formatMinutes, formatPercent } from "@/lib/grind/ui/format";
 
 function PlayIcon() {
   return (
@@ -59,9 +60,7 @@ export default async function TasksPage() {
                   />
                   <h2 className="truncate text-2xl font-semibold tracking-[-0.04em]">{task.title}</h2>
                 </div>
-                <p className="mt-2 text-sm text-muted">
-                  {task.assignmentType.replaceAll("_", " ")} · {task.subject.toUpperCase()}
-                </p>
+                <p className="mt-2 text-sm text-muted">{task.assignmentType.replaceAll("_", " ")} / {task.subject.toUpperCase()}</p>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-4 xl:min-w-[38rem] xl:grid-cols-4">
@@ -77,7 +76,9 @@ export default async function TasksPage() {
                 </div>
                 <div className="rounded-[1.6rem] bg-[linear-gradient(180deg,rgba(31,75,153,0.06),rgba(255,255,255,0.8))] px-4 py-3">
                   <p className="text-xs uppercase tracking-[0.14em] text-muted">Due</p>
-                  <p className="mt-2 text-xl font-semibold tracking-[-0.04em]">{formatShortDate(task.dueDate)}</p>
+                  <div className="mt-2 text-xl font-semibold tracking-[-0.04em]">
+                    <LiveTime value={task.dueDate} />
+                  </div>
                 </div>
                 <div className="rounded-[1.6rem] bg-[linear-gradient(180deg,rgba(44,122,75,0.07),rgba(255,255,255,0.8))] px-4 py-3">
                   <p className="text-xs uppercase tracking-[0.14em] text-muted">Progress</p>

@@ -54,7 +54,9 @@ export function runPipeline(state: DemoRepositoryState = createInitialDemoState(
       : task;
   });
 
-  const highestRiskTask = [...tasksWithRisk].sort((left, right) => right.riskProbability - left.riskProbability)[0];
+  const highestRiskTask = [...tasksWithRisk]
+    .filter((task) => task.riskProbability > 0.01 && task.taskStatus !== "submitted" && task.taskStatus !== "completed")
+    .sort((left, right) => right.riskProbability - left.riskProbability)[0];
   const highestRisk = risks.find((risk) => risk.taskId === highestRiskTask?.id);
   const intervention = generateIntervention(highestRiskTask, highestRisk, scheduleEvents, profile, DEMO_NOW);
 

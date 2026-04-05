@@ -8,7 +8,7 @@ import { assessRisk } from "@/lib/grind/risk/score";
 import { getSupabaseAdminClient } from "@/lib/grind/supabase/admin";
 import { generateSubtasks } from "@/lib/grind/tasks/decompose";
 import { normalizeEvents } from "@/lib/grind/tasks/normalize";
-import { generateRefinedSubtasks } from "@/lib/grind/tasks/purdue-genai";
+import { generateRefinedSubtasksBatched } from "@/lib/grind/tasks/gemini";
 import { buildProgress, deriveTaskStatus } from "@/lib/grind/tasks/progress";
 import { generateIntervention } from "@/lib/grind/interventions/generate";
 import { env } from "@/lib/grind/config/env";
@@ -88,6 +88,13 @@ type ObservationRow = {
   derived_start_delay_minutes: number | null;
   derived_submission_offset_minutes: number | null;
   observed_at: string;
+};
+
+type PersistedTaskState = {
+  existingSubtasks: Subtask[];
+  task: NormalizedTask;
+  taskId: string;
+  shouldGenerateRefinedSubtasks: boolean;
 };
 
 function mapExistingSubtask(row: ExistingSubtaskRow): Subtask {
@@ -424,7 +431,7 @@ export async function syncGoogleCalendarForCurrentUser(): Promise<{ importedEven
     await supabase.from("schedule_events").insert(scheduleEvents.map((event) => schedulePayload(user.id, event)));
   }
 
-  const hydratedTasks: NormalizedTask[] = [];
+  const persistedTaskStates: PersistedTaskState[] = [];
 
   for (const task of normalizedTasks) {
     const existingTask = existingTasksBySourceEvent.get(task.sourceEventId);
@@ -439,12 +446,29 @@ export async function syncGoogleCalendarForCurrentUser(): Promise<{ importedEven
     }
 
     const taskId = persistedTask.id;
-    let subtasks = existingSubtasksByTaskId.get(taskId) ?? [];
+    const subtasks = existingSubtasksByTaskId.get(taskId) ?? [];
     const shouldGenerateRefinedSubtasks = canReplaceExistingSubtasks(subtasks);
 
-    if (shouldGenerateRefinedSubtasks) {
-      const refinedTask = { ...task, id: taskId };
-      const generatedSubtasks = await generateRefinedSubtasks(refinedTask);
+    persistedTaskStates.push({
+      task,
+      taskId,
+      existingSubtasks: subtasks,
+      shouldGenerateRefinedSubtasks,
+    });
+  }
+
+  const refinedTasks = persistedTaskStates
+    .filter((state) => state.shouldGenerateRefinedSubtasks)
+    .map((state) => ({ ...state.task, id: state.taskId }));
+  const generatedSubtasksByTaskId = await generateRefinedSubtasksBatched(refinedTasks);
+
+  const hydratedTasks: NormalizedTask[] = [];
+
+  for (const state of persistedTaskStates) {
+    let subtasks = state.existingSubtasks;
+
+    if (state.shouldGenerateRefinedSubtasks) {
+      const generatedSubtasks = generatedSubtasksByTaskId.get(state.taskId) ?? generateSubtasks({ ...state.task, id: state.taskId });
 
       if (subtasks.length > 0) {
         const existingIds = subtasks.map((subtask) => subtask.id);
@@ -455,7 +479,7 @@ export async function syncGoogleCalendarForCurrentUser(): Promise<{ importedEven
         .from("subtasks")
         .insert(
           generatedSubtasks.map((subtask) => ({
-            task_id: taskId,
+            task_id: state.taskId,
             title: subtask.title,
             instructions: subtask.instructions,
             sequence_index: subtask.sequence,
@@ -470,7 +494,7 @@ export async function syncGoogleCalendarForCurrentUser(): Promise<{ importedEven
         .select("*");
 
       if (subtaskError) {
-        throw new LiveStoreError(`Unable to persist subtasks for "${task.title}".`, "schema_missing");
+        throw new LiveStoreError(`Unable to persist subtasks for "${state.task.title}".`, "schema_missing");
       }
 
       subtasks = ((insertedSubtasks ?? []) as ExistingSubtaskRow[]).map(mapExistingSubtask);
@@ -478,15 +502,15 @@ export async function syncGoogleCalendarForCurrentUser(): Promise<{ importedEven
 
     const progress = buildProgress(subtasks);
     const hydratedTask: NormalizedTask = {
-      ...task,
-      id: taskId,
+      ...state.task,
+      id: state.taskId,
       actualStartTime: progress.derivedStartTime,
       submissionTime: progress.derivedCompletionTime,
       predictedDelayMinutes: progress.derivedStartTime ? 0 : profile.meanStartDelayMinutes,
-      predictedCompletionTimeMinutes: task.estimatedEffortMinutesBase + (progress.derivedStartTime ? 0 : profile.meanStartDelayMinutes),
+      predictedCompletionTimeMinutes: state.task.estimatedEffortMinutesBase + (progress.derivedStartTime ? 0 : profile.meanStartDelayMinutes),
       taskStatus: deriveTaskStatus({
-        ...task,
-        id: taskId,
+        ...state.task,
+        id: state.taskId,
         subtasks,
         progress,
       }),
@@ -511,7 +535,9 @@ export async function syncGoogleCalendarForCurrentUser(): Promise<{ importedEven
       : task;
   });
 
-  const highestRiskTask = [...tasksWithRisk].sort((left, right) => right.riskProbability - left.riskProbability)[0];
+  const highestRiskTask = [...tasksWithRisk]
+    .filter((task) => task.riskProbability > 0.01 && task.taskStatus !== "submitted" && task.taskStatus !== "completed")
+    .sort((left, right) => right.riskProbability - left.riskProbability)[0];
   const highestRisk = risks.find((entry) => entry.taskId === highestRiskTask?.id);
   const intervention = generateIntervention(highestRiskTask, highestRisk, scheduleEvents, profile, nowIso);
   const notifications = buildNotifications(highestRiskTask, highestRisk, intervention);
