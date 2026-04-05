@@ -5,12 +5,11 @@ export default function TopBar({ onMenuClick }) {
         <button className="icon-btn" aria-label="Menu" onClick={onMenuClick}>☰</button>
         <a href="/" className="logo">
           <span className="logo-dot" />
-          <span className="logo-text">GRIND</span>
+          <span className="logo-text">
+            <span className="logo-text-main">GRIND</span>
+            <span className="logo-text-sub">Pulse</span>
+          </span>
         </a>
-      </div>
-      <div className="topbar-right">
-        <button className="icon-btn" aria-label="Focus mode">◎</button>
-        <button className="icon-btn" aria-label="Settings">⊙</button>
       </div>
     </header>
   );

@@ -2,10 +2,8 @@ import { useState } from "react";
 import Login from "./components/grind/Login";
 import TopBar from "./components/grind/TopBar";
 import Sidebar from "./components/grind/Sidebar";
-import MetricCards from "./components/grind/MetricCards";
 import PulseChart from "./components/grind/PulseChart";
 import TaskList from "./components/grind/TaskList";
-import DistortionPanel from "./components/grind/DistortionPanel";
 import InterventionCard from "./components/grind/InterventionCard";
 import InterventionPage from "./components/grind/InterventionPage";
 import UpdatedSchedulePage from "./components/grind/UpdatedSchedulePage";
@@ -216,11 +214,15 @@ const DEFAULT_DASHBOARD = {
   classes: [],
 };
 
-function Dashboard({ user, onNavigate, data }) {
+function Dashboard({ user, onNavigate, data, onFinishTask }) {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
   const firstName = user.firstName || user.fullName || "Student";
   const classCount = Array.isArray(data.classes) ? data.classes.length : 0;
+  const completedToday = Array.isArray(data.tasks)
+    ? data.tasks.filter((task) => task?.completed || task?.done || task?.status === "done").length
+    : 0;
+  const totalToday = Array.isArray(data.tasks) ? data.tasks.length : 0;
   const taskLabel = Array.isArray(data.tasks) && data.tasks.some((task) => String(task.id || "").startsWith("gcal-"))
     ? "Upcoming from Google Calendar"
     : "Today";
@@ -234,12 +236,8 @@ function Dashboard({ user, onNavigate, data }) {
           <p>Synced {classCount} Google Classroom {classCount === 1 ? "class" : "classes"}.</p>
         )}
       </div>
-      <MetricCards metrics={data.metrics} />
-      <PulseChart restingRate={data.restingRate} />
-      <div className="two-col">
-        <TaskList tasks={data.tasks} label={taskLabel} />
-        <DistortionPanel insights={data.distortion} />
-      </div>
+      <PulseChart completedToday={completedToday} totalToday={totalToday} />
+      <TaskList tasks={data.tasks} label={taskLabel} onFinishTask={onFinishTask} />
       <InterventionCard intervention={data.intervention} onOpen={() => onNavigate("intervention")} />
     </div>
   );
@@ -262,6 +260,15 @@ export default function App() {
   const [page, setPage]         = useState("dashboard");
   const [dashboardData, setDashboardData] = useState(DEFAULT_DASHBOARD);
   const [loginBusy, setLoginBusy] = useState(false);
+
+  function handleFinishTask(taskId) {
+    setDashboardData((prev) => ({
+      ...prev,
+      tasks: (Array.isArray(prev.tasks) ? prev.tasks : []).map((task) =>
+        task.id === taskId ? { ...task, completed: true, status: "done" } : task
+      ),
+    }));
+  }
 
   async function syncCalendarTasks(accessToken, fallbackTasks = DEFAULT_DASHBOARD.tasks) {
     try {
@@ -340,7 +347,7 @@ export default function App() {
 
   function renderPage() {
     switch (page) {
-      case "dashboard":    return <Dashboard user={user} onNavigate={setPage} data={dashboardData} />;
+      case "dashboard":    return <Dashboard user={user} onNavigate={setPage} data={dashboardData} onFinishTask={handleFinishTask} />;
       case "schedule":     return <UpdatedSchedulePage />;
       case "intervention": return <InterventionPage />;
       default:                  return <PlaceholderPage title={page.charAt(0).toUpperCase() + page.slice(1)} />;
